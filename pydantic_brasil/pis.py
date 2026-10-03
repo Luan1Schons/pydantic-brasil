@@ -1,4 +1,4 @@
-"""PIS, PASEP, NIS and NIT validation and formatting."""
+"""Validação e formatação de PIS, PASEP, NIS e NIT."""
 
 from __future__ import annotations
 
@@ -10,11 +10,10 @@ from pydantic_brasil.exceptions import PISInvalidError
 
 
 class PIS(BrazilianType):
-    """Brazilian PIS/PASEP/NIS/NIT document validator and formatter.
+    """Identificador do trabalhador brasileiro (PIS / PASEP / NIS / NIT).
 
-    PIS (Programa de Integração Social) and PASEP (Programa de Formação do
-    Patrimônio do Servidor Público) share the same 11-digit structure and Modulo 11
-    checksum verification.
+    O PIS (Programa de Integração Social) e o PASEP compartilham a mesma
+    estrutura de 11 dígitos numéricos e validação oficial por Módulo 11.
     """
 
     EXPECTED_DIGITS: ClassVar[Optional[int]] = 11
@@ -27,13 +26,13 @@ class PIS(BrazilianType):
 
         if len(digits) != 11:
             raise PISInvalidError(
-                f"PIS must have exactly 11 digits (received '{value}')",
+                f"PIS deve conter exatamente 11 dígitos numéricos (recebido '{value}')",
                 value=value,
             )
 
         if len(set(digits)) == 1:
             raise PISInvalidError(
-                f"PIS cannot have all repeated digits: '{value}'",
+                f"PIS não pode conter todos os dígitos iguais: '{value}'",
                 value=value,
             )
 
@@ -43,7 +42,7 @@ class PIS(BrazilianType):
 
         if int(digits[10]) != expected_dv:
             raise PISInvalidError(
-                f"Invalid PIS checksum for '{value}'",
+                f"Dígito verificador inválido para o PIS '{value}'",
                 value=value,
             )
 
@@ -51,19 +50,19 @@ class PIS(BrazilianType):
 
     @property
     def formatted(self) -> str:
-        """Returns standard formatted PIS (XXX.XXXXX.XX-X)."""
+        """Retorna o PIS formatado: `XXX.XXXXX.XX-X`."""
         d = self.digits
         return f"{d[:3]}.{d[3:8]}.{d[8:10]}-{d[10]}"
 
     @property
     def masked(self) -> str:
-        """Returns LGPD-compliant masked PIS (XXX.*****.**-X)."""
+        """Retorna o PIS mascarado para conformidade com a LGPD: `XXX.*****.**-X`."""
         d = self.digits
         return f"{d[:3]}.*****.**-{d[10]}"
 
     @classmethod
     def generate(cls, formatted: bool = False) -> PIS:
-        """Generates a valid PIS document for testing purposes."""
+        """Gera um PIS válido para testes."""
         while True:
             first_10 = [random.randint(0, 9) for _ in range(10)]
             if len(set(first_10)) > 1:
@@ -79,7 +78,7 @@ class PIS(BrazilianType):
         return instance
 
 
-# Common aliases in Brazilian business domain
+# Aliases comuns no domínio corporativo brasileiro
 PASEP = PIS
 NIS = PIS
 NIT = PIS

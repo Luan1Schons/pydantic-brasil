@@ -1,4 +1,4 @@
-"""Inscrição Estadual (IE) validation for Brazilian States (UFs)."""
+"""Validação de Inscrição Estadual (IE) para unidades federativas brasileiras."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from pydantic_brasil.exceptions import StateRegistrationInvalidError
 
 
 def _validate_sp(digits: str) -> bool:
-    """Validates São Paulo (SP) Inscrição Estadual (12 digits or 'P' prefix for rural)."""
+    """Valida Inscrição Estadual de SP (12 dígitos ou prefixo 'P' para produtor rural)."""
     if digits.startswith("P"):
-        # Rural producer: P followed by 8 digits + 1 check digit
+        # Produtor rural: P seguido de 8 dígitos + 1 dígito verificador
         body = digits[1:9]
         if len(body) != 8:
             return False
@@ -24,14 +24,14 @@ def _validate_sp(digits: str) -> bool:
     if len(digits) != 12:
         return False
 
-    # 1st DV (position 9)
+    # 1º DV (posição 9)
     w1 = [1, 3, 4, 5, 6, 7, 8, 10]
     s1 = sum(int(digits[i]) * w1[i] for i in range(8))
     dv1 = (s1 % 11) % 10
     if int(digits[8]) != dv1:
         return False
 
-    # 2nd DV (position 12)
+    # 2º DV (posição 12)
     w2 = [3, 2, 10, 9, 8, 7, 6, 5, 4, 3, 2]
     s2 = sum(int(digits[i]) * w2[i] for i in range(11))
     dv2 = (s2 % 11) % 10
@@ -39,7 +39,7 @@ def _validate_sp(digits: str) -> bool:
 
 
 def _validate_rj(digits: str) -> bool:
-    """Validates Rio de Janeiro (RJ) Inscrição Estadual (8 digits)."""
+    """Valida Inscrição Estadual do Rio de Janeiro (RJ) (8 dígitos)."""
     if len(digits) != 8:
         return False
     weights = [2, 7, 6, 5, 4, 3, 2]
@@ -50,11 +50,11 @@ def _validate_rj(digits: str) -> bool:
 
 
 def _validate_mg(digits: str) -> bool:
-    """Validates Minas Gerais (MG) Inscrição Estadual (13 digits)."""
+    """Valida Inscrição Estadual de Minas Gerais (MG) (13 dígitos)."""
     if len(digits) != 13:
         return False
 
-    # MG 1st DV
+    # MG 1º DV
     body = digits[:3] + "0" + digits[3:11]
     w1 = [1, 2] * 6
     terms = []
@@ -67,7 +67,7 @@ def _validate_mg(digits: str) -> bool:
     if int(digits[11]) != dv1:
         return False
 
-    # MG 2nd DV
+    # MG 2º DV
     w2 = [3, 2, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2]
     s2 = sum(int(digits[i]) * w2[i] for i in range(12))
     r2 = s2 % 11
@@ -76,7 +76,7 @@ def _validate_mg(digits: str) -> bool:
 
 
 def _validate_rs(digits: str) -> bool:
-    """Validates Rio Grande do Sul (RS) Inscrição Estadual (10 digits)."""
+    """Valida Inscrição Estadual do Rio Grande do Sul (RS) (10 dígitos)."""
     if len(digits) != 10:
         return False
     weights = [2, 9, 8, 7, 6, 5, 4, 3, 2]
@@ -87,7 +87,7 @@ def _validate_rs(digits: str) -> bool:
 
 
 def _validate_pr(digits: str) -> bool:
-    """Validates Paraná (PR) Inscrição Estadual (10 digits)."""
+    """Valida Inscrição Estadual do Paraná (PR) (10 dígitos)."""
     if len(digits) != 10:
         return False
     w1 = [3, 2, 7, 6, 5, 4, 3, 2]
@@ -105,7 +105,7 @@ def _validate_pr(digits: str) -> bool:
 
 
 def _validate_sc(digits: str) -> bool:
-    """Validates Santa Catarina (SC) Inscrição Estadual (9 digits)."""
+    """Valida Inscrição Estadual de Santa Catarina (SC) (9 dígitos)."""
     if len(digits) != 9:
         return False
     weights = [9, 8, 7, 6, 5, 4, 3, 2]
@@ -116,18 +116,19 @@ def _validate_sc(digits: str) -> bool:
 
 
 def _validate_generic(digits: str) -> bool:
-    """Fallback validator for other UFs: ensures minimum 8 to 14 numeric digits."""
+    """Validador padrão para outras UFs: assegura entre 8 e 14 dígitos numéricos."""
     return 8 <= len(digits) <= 14 and digits.isdigit()
 
 
 class InscricaoEstadual(BrazilianType):
-    """Brazilian State Tax Registration (Inscrição Estadual - IE).
+    """Inscrição Estadual (IE).
 
-    Features:
-    - Official checksum and pattern validation for Brazilian states (SP, RJ, MG, RS, PR, SC, etc.).
-    - Supports 'ISENTO' for exempt businesses.
-    - `.uf`: Optional state specified.
-    - `.formatted`: Numeric digits or 'ISENTO'.
+    Recursos:
+    - Validação de dígitos verificadores e formatos por UF (SP, RJ, MG, RS, PR, SC, etc.).
+    - Suporte a 'ISENTO' para contribuintes desobrigados.
+    - Suporte a produtores rurais de São Paulo com prefixo 'P'.
+    - `.uf`: UF validada opcionalmente.
+    - `.formatted`: Dígitos ou 'ISENTO'.
     """
 
     STATE_VALIDATORS: ClassVar[Dict[str, Callable[[str], bool]]] = {
@@ -160,14 +161,14 @@ class InscricaoEstadual(BrazilianType):
             validator = cls.STATE_VALIDATORS.get(uf_upper, _validate_generic)
             if not validator(raw_digits):
                 raise StateRegistrationInvalidError(
-                    f"Invalid Inscrição Estadual for state '{uf_upper}': '{value}'",
+                    f"Inscrição Estadual inválida para a UF '{uf_upper}': '{value}'",
                     value=value,
                 )
         else:
-            # If no UF provided, ensure reasonable IE digit length
+            # Se nenhuma UF for especificada, valida comprimento geral
             if not (8 <= len(raw_digits) <= 14):
                 raise StateRegistrationInvalidError(
-                    f"Inscrição Estadual must have between 8 and 14 digits (received '{value}')",
+                    f"Inscrição Estadual deve ter entre 8 e 14 dígitos (recebido '{value}')",
                     value=value,
                 )
 
@@ -184,29 +185,29 @@ class InscricaoEstadual(BrazilianType):
         digits = cls._extract_digits(upper)
         if not (8 <= len(digits) <= 14):
             raise StateRegistrationInvalidError(
-                f"Invalid Inscrição Estadual: '{value}'",
+                f"Inscrição Estadual inválida: '{value}'",
                 value=value,
             )
         return digits
 
     @property
     def is_isento(self) -> bool:
-        """Returns True if the taxpayer is exempt from state registration."""
+        """Retorna True se for ISENTO de Inscrição Estadual."""
         return str(self) == "ISENTO"
 
     @property
     def uf(self) -> Optional[str]:
-        """Returns the Brazilian state (UF) this registration was validated against, if set."""
+        """Retorna a UF utilizada na validação, se fornecida."""
         return getattr(self, "_uf", None)
 
     @property
     def formatted(self) -> str:
-        """Returns registration digits or 'ISENTO'."""
+        """Retorna os dígitos ou 'ISENTO'."""
         return str(self)
 
     @property
     def masked(self) -> str:
-        """Returns masked registration string."""
+        """Retorna a inscrição mascarada."""
         if self.is_isento:
             return "ISENTO"
         d = self.digits
@@ -219,6 +220,6 @@ class InscricaoEstadual(BrazilianType):
         return {
             "type": "string",
             "title": "InscricaoEstadual",
-            "description": "Brazilian State Tax Registration (Inscrição Estadual or ISENTO)",
+            "description": "Inscrição Estadual (IE) ou ISENTO",
             "examples": ["110.042.490.114", "ISENTO"],
         }

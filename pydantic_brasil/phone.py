@@ -1,4 +1,4 @@
-"""Brazilian Phone number (TelefoneBR) validation and formatting."""
+"""Validação e formatação de telefone brasileiro (TelefoneBR)."""
 
 from __future__ import annotations
 
@@ -10,20 +10,20 @@ from pydantic_brasil.exceptions import PhoneInvalidError
 
 
 class TelefoneBR(BrazilianType):
-    """Brazilian landline and mobile telephone number (TelefoneBR).
+    """Número de telefone fixo ou celular brasileiro (TelefoneBR).
 
-    Features:
-    - Validates Brazilian DDD area codes.
-    - Validates mobile (11 digits, starts with 9) and landline (10 digits, starts with 2-5).
-    - Accepts optional Brazilian country code `+55`.
-    - `.is_mobile` / `.is_landline`: Classifies mobile vs landline.
-    - `.ddd`: Area code string (e.g. '11', '21').
-    - `.number`: Local subscriber number string.
-    - `.formatted`: `(11) 98765-4321` or `(11) 3456-7890`.
+    Recursos:
+    - Validação de códigos de área (DDDs oficiais da ANATEL).
+    - Validação de celular (11 dígitos, iniciado com 9) e fixo (10 dígitos, iniciado com 2 a 5).
+    - Aceita código do país `+55` opcionalmente.
+    - `.is_mobile` / `.is_landline`: Classificação entre celular e fixo.
+    - `.ddd`: Código de área com 2 dígitos (ex: '11', '21').
+    - `.number`: Número do assinante sem o DDD.
+    - `.formatted`: `(11) 98765-4321` ou `(11) 3456-7890`.
     - `.masked`: `(11) 9****-**21`.
-    - `.e164`: International E.164 format: `+5511987654321`.
-    - `.whatsapp_link`: Direct WhatsApp click-to-chat URL: `https://wa.me/5511987654321`.
-    - `TelefoneBR.generate(ddd=11, mobile=True)`: Test data generator.
+    - `.e164`: Formato internacional E.164: `+5511987654321`.
+    - `.whatsapp_link`: Link direto para conversa no WhatsApp: `https://wa.me/5511987654321`.
+    - `TelefoneBR.generate(ddd=11, mobile=True)`: Gerador para testes.
     """
 
     VALID_DDDS: ClassVar[Set[str]] = {
@@ -66,7 +66,7 @@ class TelefoneBR(BrazilianType):
         "53",
         "54",
         "55",
-        # Centro-Oeste / Norte
+        # Centro-Oeste / TO / RO / AC
         "61",
         "62",
         "63",
@@ -76,23 +76,24 @@ class TelefoneBR(BrazilianType):
         "67",
         "68",
         "69",
-        # Nordeste
+        # BA / SE
         "71",
         "73",
         "74",
         "75",
         "77",
         "79",
+        # PE / AL / PB / RN
         "81",
         "82",
         "83",
         "84",
+        "87",
+        # CE / PI / MA / PA / AP / AM / RR
         "85",
         "86",
-        "87",
         "88",
         "89",
-        # Norte
         "91",
         "92",
         "93",
@@ -107,8 +108,9 @@ class TelefoneBR(BrazilianType):
     @classmethod
     def _extract_digits(cls, value: str) -> str:
         digits = super()._extract_digits(value)
-        if digits.startswith("55") and len(digits) in (12, 13):
-            return digits[2:]
+        # Remove código do país se fornecido (+55)
+        if len(digits) in (12, 13) and digits.startswith("55"):
+            digits = digits[2:]
         return digits
 
     @classmethod
@@ -117,31 +119,31 @@ class TelefoneBR(BrazilianType):
 
         if len(digits) not in (10, 11):
             raise PhoneInvalidError(
-                f"Brazilian phone number must have 10 (landline) or 11 (mobile) digits "
-                f"(received {len(digits)})",
+                f"Telefone brasileiro deve ter 10 (fixo) ou 11 (celular) dígitos "
+                f"(recebido {len(digits)})",
                 value=value,
             )
 
         ddd = digits[:2]
         if ddd not in cls.VALID_DDDS:
             raise PhoneInvalidError(
-                f"Invalid Brazilian area code (DDD): '{ddd}'",
+                f"DDD '{ddd}' inválido para telefone brasileiro",
                 value=value,
             )
 
         number = digits[2:]
         if len(digits) == 11:
-            # Mobile: must start with 9
+            # Celular deve iniciar com 9
             if number[0] != "9":
                 raise PhoneInvalidError(
-                    f"Brazilian mobile numbers must start with digit '9' (got '{number[0]}')",
+                    f"Celular brasileiro deve iniciar com o dígito '9' (recebido '{number[0]}')",
                     value=value,
                 )
         else:
-            # Landline (10 digits): must start with 2, 3, 4, or 5
+            # Fixo deve iniciar com 2, 3, 4 ou 5
             if number[0] not in ("2", "3", "4", "5"):
                 raise PhoneInvalidError(
-                    f"Brazilian landline numbers must start with 2, 3, 4, or 5 (got '{number[0]}')",
+                    f"Telefone fixo deve iniciar com 2, 3, 4 ou 5 (recebido '{number[0]}')",
                     value=value,
                 )
 
@@ -149,27 +151,27 @@ class TelefoneBR(BrazilianType):
 
     @property
     def ddd(self) -> str:
-        """Returns the 2-digit Brazilian area code (DDD)."""
+        """Retorna o código DDD com 2 dígitos."""
         return self.digits[:2]
 
     @property
     def number(self) -> str:
-        """Returns the local subscriber number without DDD."""
+        """Retorna o número do assinante sem o DDD."""
         return self.digits[2:]
 
     @property
     def is_mobile(self) -> bool:
-        """Returns True if this is a 9-digit mobile number."""
+        """Retorna True se for um telefone celular (11 dígitos)."""
         return len(self.digits) == 11
 
     @property
     def is_landline(self) -> bool:
-        """Returns True if this is an 8-digit landline number."""
+        """Retorna True se for um telefone fixo (10 dígitos)."""
         return len(self.digits) == 10
 
     @property
     def formatted(self) -> str:
-        """Returns standard punctuated telephone string: `(11) 98765-4321` or `(11) 3456-7890`."""
+        """Retorna o telefone formatado: `(11) 98765-4321` ou `(11) 3456-7890`."""
         d = self.digits
         if len(d) == 11:
             return f"({d[:2]}) {d[2:7]}-{d[7:]}"
@@ -177,7 +179,7 @@ class TelefoneBR(BrazilianType):
 
     @property
     def masked(self) -> str:
-        """Returns masked telephone string: `(11) 9****-**21` or `(11) 3***-**90`."""
+        """Retorna o telefone mascarado: `(11) 9****-**21` ou `(11) 3***-**90`."""
         d = self.digits
         if len(d) == 11:
             return f"({d[:2]}) {d[2]}****-**{d[-2:]}"
@@ -185,12 +187,12 @@ class TelefoneBR(BrazilianType):
 
     @property
     def e164(self) -> str:
-        """Returns international E.164 formatted string: `+5511987654321`."""
+        """Retorna o número no formato internacional E.164: `+5511987654321`."""
         return f"+55{self.digits}"
 
     @property
     def whatsapp_link(self) -> str:
-        """Returns direct WhatsApp click-to-chat URL: `https://wa.me/5511987654321`."""
+        """Retorna o link oficial de conversa no WhatsApp: `https://wa.me/5511987654321`."""
         return f"https://wa.me/55{self.digits}"
 
     @classmethod
@@ -200,16 +202,16 @@ class TelefoneBR(BrazilianType):
         mobile: bool = True,
         formatted: bool = False,
     ) -> TelefoneBR:
-        """Generates a valid Brazilian phone number for testing.
+        """Gera um telefone válido para testes.
 
         Args:
-            ddd: Optional DDD (e.g. 11, '21'). If omitted, randomly chosen from valid DDDs.
-            mobile: If True generates 11-digit mobile, else 10-digit landline.
-            formatted: If True returns punctuated string.
+            ddd: DDD opcional (ex: 11, '21'). Se omitido, sorteia um DDD válido.
+            mobile: Se verdadeiro gera celular (11 dígitos), senão fixo (10 dígitos).
+            formatted: Se verdadeiro retorna com pontuação.
         """
         chosen_ddd = str(ddd) if ddd is not None else random.choice(list(cls.VALID_DDDS))
         if chosen_ddd not in cls.VALID_DDDS:
-            raise ValueError(f"Invalid Brazilian DDD: {ddd}")
+            raise ValueError(f"DDD inválido: {ddd}")
 
         if mobile:
             subscriber = "9" + "".join(str(random.randint(0, 9)) for _ in range(8))
@@ -226,7 +228,7 @@ class TelefoneBR(BrazilianType):
         return {
             "type": "string",
             "title": "TelefoneBR",
-            "description": "Brazilian phone number (landline or mobile with valid DDD)",
+            "description": "Número de telefone brasileiro (fixo ou celular com DDD válido)",
             "examples": ["(11) 98765-4321", "11987654321", "+5511987654321"],
             "pattern": r"^(\+55)?\s?\(?[1-9]{2}\)?\s?(9[1-9]\d{3}|[2-5]\d{3})-?\d{4}$",
         }

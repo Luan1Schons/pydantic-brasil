@@ -1,4 +1,4 @@
-"""Brazilian Real (BRL) currency Value Object (DinheiroBRL)."""
+"""Objeto de valor para moeda brasileira (Real - BRL)."""
 
 from __future__ import annotations
 
@@ -12,17 +12,17 @@ from pydantic_brasil.exceptions import MoneyInvalidError
 
 
 class DinheiroBRL:
-    """Brazilian Real (BRL) currency Value Object backed by `decimal.Decimal`.
+    """Objeto de valor para valores monetários em Real (BRL) baseado em `decimal.Decimal`.
 
-    Features:
-    - Precise fixed-point decimal arithmetic (no binary float rounding errors).
-    - Parses strings with Brazilian formatting (`"R$ 1.250,50"`, `"1250,50"`,
-      `"1250.50"`), ints, floats and Decimals.
-    - `.amount`: Returns the exact `Decimal` value rounded to 2 decimal places.
-    - `.centavos`: Returns the integer value in cents (e.g. 125050 for R$ 1.250,50 -
-      essential for Stripe, Pagar.me, etc.).
-    - `.formatted`: Formatted Brazilian string (`R$ 1.250,50`).
-    - Full arithmetic support (`+`, `-`, `*`, `/`, `<`, `<=`, `>`, `>=`, `==`).
+    Recursos:
+    - Aritmética decimal de ponto fixo precisa (sem erros de arredondamento de float binário).
+    - Interpreta strings no padrão brasileiro (`"R$ 1.250,50"`, `"1250,50"`,
+      `"1250.50"`), inteiros, floats e Decimals.
+    - `.amount`: Retorna o valor exato em `Decimal` arredondado para 2 casas decimais.
+    - `.centavos`: Retorna o valor em centavos inteiros (ex: 125050 para R$ 1.250,50 -
+      ideal para gateways de pagamento como Pagar.me, Asaas, etc.).
+    - `.formatted`: String formatada no padrão brasileiro (`R$ 1.250,50`).
+    - Suporte aritmético completo (`+`, `-`, `*`, `/`, `<`, `<=`, `>`, `>=`, `==`).
     """
 
     _amount: Decimal
@@ -45,15 +45,12 @@ class DinheiroBRL:
             clean = value.strip().upper()
             clean = clean.replace("R$", "").strip()
 
-            # Handle Brazilian notation (1.234,56) vs standard notation (1234.56)
+            # Trata pontuação brasileira (1.234,56) vs padrão internacional (1234.56)
             if "," in clean and "." in clean:
-                # E.g. 1.234,56 -> remove dots, replace comma with dot
                 clean = clean.replace(".", "").replace(",", ".")
             elif "," in clean:
-                # E.g. 1234,56 -> replace comma with dot
                 clean = clean.replace(",", ".")
 
-            # Remove spaces
             clean = re.sub(r"\s+", "", clean)
 
             try:
@@ -61,33 +58,33 @@ class DinheiroBRL:
                 return dec.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             except InvalidOperation as exc:
                 raise MoneyInvalidError(
-                    f"Cannot parse '{value}' as Brazilian Real currency (BRL).",
+                    f"Não foi possível converter '{value}' em moeda Real (BRL).",
                     value=value,
                 ) from exc
 
         raise MoneyInvalidError(
-            f"Unsupported type for DinheiroBRL: {type(value).__name__}",
+            f"Tipo incompatível para DinheiroBRL: {type(value).__name__}",
             value=value,
         )
 
     @property
     def amount(self) -> Decimal:
-        """Returns the exact `Decimal` amount (e.g. Decimal('1250.50'))."""
+        """Retorna o valor exato em `Decimal` (ex: Decimal('1250.50'))."""
         return self._amount
 
     @property
     def centavos(self) -> int:
-        """Returns the amount converted to integer cents (e.g. 125050 for R$ 1.250,50)."""
+        """Retorna o valor convertido em centavos inteiros (ex: 125050 para R$ 1.250,50)."""
         return int(self._amount * 100)
 
     @property
     def formatted(self) -> str:
-        """Returns standard Brazilian currency string: `R$ 1.250,50`."""
+        """Retorna a representação monetária brasileira: `R$ 1.250,50`."""
         return f"R$ {self.formatted_no_symbol}"
 
     @property
     def formatted_no_symbol(self) -> str:
-        """Returns formatted string without currency symbol: `1.250,50`."""
+        """Retorna o valor formatado sem o símbolo R$: `1.250,50`."""
         cents = abs(self.centavos) % 100
         whole = abs(int(self._amount))
         whole_str = f"{whole:,}".replace(",", ".")
@@ -143,7 +140,7 @@ class DinheiroBRL:
 
     @classmethod
     def from_centavos(cls, cents: int) -> DinheiroBRL:
-        """Creates a DinheiroBRL instance from integer centavos (e.g. 1000 -> R$ 10,00)."""
+        """Cria DinheiroBRL a partir de centavos inteiros (ex: 1000 -> R$ 10,00)."""
         return cls(Decimal(cents) / Decimal(100))
 
     @classmethod
@@ -189,10 +186,10 @@ class DinheiroBRL:
         return {
             "type": "number",
             "title": "DinheiroBRL",
-            "description": "Brazilian Real currency (BRL)",
+            "description": "Valor monetário em Real brasileiro (BRL)",
             "examples": ["R$ 1.250,50", 1250.50],
         }
 
 
-# Short alias
+# Alias
 BRL = DinheiroBRL

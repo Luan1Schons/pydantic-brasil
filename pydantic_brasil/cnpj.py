@@ -1,4 +1,4 @@
-"""CNPJ (Cadastro Nacional da Pessoa Jurídica) validation and formatting."""
+"""Validação e formatação de CNPJ (Cadastro Nacional da Pessoa Jurídica)."""
 
 from __future__ import annotations
 
@@ -11,18 +11,17 @@ from pydantic_brasil.exceptions import CNPJInvalidError
 
 
 class CNPJ(BrazilianType):
-    """Brazilian legal entity registry (Cadastro Nacional da Pessoa Jurídica - CNPJ).
+    """Cadastro Nacional da Pessoa Jurídica (CNPJ).
 
-    Features:
-    - Official Modulo 11 verification digits calculation.
-    - Full support for both traditional numerical format and the
-      Receita Federal 2026 alphanumeric format.
-    - Rejection of identical repeated sequences.
+    Recursos:
+    - Validação oficial dos dígitos verificadores via Módulo 11.
+    - Suporte integral ao padrão numérico e ao novo padrão alfanumérico 2026 da Receita Federal.
+    - Rejeição de sequências com todos os caracteres repetidos.
     - `.formatted`: `12.345.678/0001-90`.
     - `.masked`: `12.***.***/0001-90`.
-    - `.is_matriz` / `.is_filial`: Identifies headquarters vs branch office.
-    - `.branch_number`: The 4-character branch identifier.
-    - `CNPJ.generate(formatted=True, branch=1)`: Test data generator.
+    - `.is_matriz` / `.is_filial`: Identificação de matriz ou filial.
+    - `.branch_number`: Identificador de filial/ordem com 4 caracteres.
+    - `CNPJ.generate(formatted=True, branch=1)`: Gerador de dados para testes.
     """
 
     EXPECTED_DIGITS: ClassVar[Optional[int]] = 14
@@ -31,60 +30,57 @@ class CNPJ(BrazilianType):
 
     @classmethod
     def _char_value(cls, char: str) -> int:
-        """Converts character to numeric value according to Receita Federal standard.
+        """Converte o caractere para valor numérico conforme a regra da Receita Federal.
 
-        Digits '0'-'9' have values 0-9.
-        Letters 'A'-'Z' have values ord(char) - 48 (e.g. 'A' = 17, 'B' = 18).
+        Dígitos '0'-'9' possuem valores 0 a 9.
+        Letras 'A'-'Z' possuem valores ord(char) - 48 (ex: 'A' = 17, 'B' = 18).
         """
         c = char.upper()
         if c.isdigit():
             return int(c)
         if "A" <= c <= "Z":
             return ord(c) - 48
-        raise CNPJInvalidError(f"Invalid character in CNPJ: '{char}'")
+        raise CNPJInvalidError(f"Caractere inválido no CNPJ: '{char}'")
 
     @classmethod
     def _validate(cls, value: str) -> str:
-        # Strip common formatting punctuation: '.', '/', '-'
         cleaned = re.sub(r"[\.\/\-\s]", "", value.upper())
 
         if len(cleaned) != 14:
             raise CNPJInvalidError(
-                f"CNPJ must have exactly 14 characters (received {len(cleaned)})",
+                f"CNPJ deve conter exatamente 14 caracteres (recebido {len(cleaned)})",
                 value=value,
             )
 
-        # Check for disallowed repeated sequences if purely numeric
         if cleaned.isdigit() and len(set(cleaned)) == 1:
             raise CNPJInvalidError(
-                f"CNPJ cannot be composed of identical repeated digits: '{value}'",
+                f"CNPJ não pode conter todos os dígitos iguais: '{value}'",
                 value=value,
             )
 
-        # Last 2 characters must always be digits
         if not (cleaned[12].isdigit() and cleaned[13].isdigit()):
             raise CNPJInvalidError(
-                f"The verification digits of a CNPJ must be numeric: '{cleaned[12:]}'",
+                f"Os dígitos verificadores do CNPJ devem ser numéricos: '{cleaned[12:]}'",
                 value=value,
             )
 
-        # Calculate 1st Check Digit
+        # Primeiro dígito verificador
         s1 = sum(cls._char_value(cleaned[i]) * cls.WEIGHTS_DV1[i] for i in range(12))
         r1 = s1 % 11
         dv1 = 0 if r1 < 2 else 11 - r1
         if int(cleaned[12]) != dv1:
             raise CNPJInvalidError(
-                f"Invalid CNPJ checksum digit 1 (expected {dv1}, got {cleaned[12]})",
+                f"Primeiro dígito verificador inválido para o CNPJ '{value}'",
                 value=value,
             )
 
-        # Calculate 2nd Check Digit
+        # Segundo dígito verificador
         s2 = sum(cls._char_value(cleaned[i]) * cls.WEIGHTS_DV2[i] for i in range(13))
         r2 = s2 % 11
         dv2 = 0 if r2 < 2 else 11 - r2
         if int(cleaned[13]) != dv2:
             raise CNPJInvalidError(
-                f"Invalid CNPJ checksum digit 2 (expected {dv2}, got {cleaned[13]})",
+                f"Segundo dígito verificador inválido para o CNPJ '{value}'",
                 value=value,
             )
 
@@ -92,55 +88,53 @@ class CNPJ(BrazilianType):
 
     @property
     def formatted(self) -> str:
-        """Returns standard punctuated CNPJ string: `00.000.000/0000-00`."""
+        """Retorna o CNPJ formatado: `00.000.000/0000-00`."""
         d = str(self)
         return f"{d[:2]}.{d[2:5]}.{d[5:8]}/{d[8:12]}-{d[12:]}"
 
     @property
     def masked(self) -> str:
-        """Returns masked CNPJ string preserving root and branch: `00.***.***/0000-00`."""
+        """Retorna o CNPJ mascarado para conformidade com a LGPD: `00.***.***/0000-00`."""
         d = str(self)
         return f"{d[:2]}.***.***/{d[8:12]}-{d[12:]}"
 
     @property
     def is_matriz(self) -> bool:
-        """Returns True if this is the headquarters (matriz), typically branch 0001."""
+        """Retorna True se for matriz (normalmente ordem 0001)."""
         return self.branch_number == "0001"
 
     @property
     def is_filial(self) -> bool:
-        """Returns True if this is a branch office (filial)."""
+        """Retorna True se for filial."""
         return not self.is_matriz
 
     @property
     def branch_number(self) -> str:
-        """Returns the 4-character branch identifier (characters 9 to 12)."""
+        """Retorna o número/código da filial com 4 caracteres."""
         return str(self)[8:12]
 
     @property
     def is_alphanumeric(self) -> bool:
-        """Returns True if this CNPJ contains letters under the new 2026 format."""
+        """Retorna True se contiver caracteres alfabéticos (formato 2026)."""
         return any(c.isalpha() for c in str(self)[:12])
 
     @classmethod
     def generate(cls, formatted: bool = False, branch: int = 1) -> CNPJ:
-        """Generates a valid traditional CNPJ for testing purposes.
+        """Gera um CNPJ válido para testes.
 
         Args:
-            formatted: If True, returns punctuated string; otherwise 14 characters.
-            branch: Branch number (default 1 for headquarters '0001').
+            formatted: Se verdadeiro, retorna formatado com pontuação.
+            branch: Número da filial (padrão 1 para matriz '0001').
         """
         root = [random.randint(0, 9) for _ in range(8)]
         branch_str = str(branch).zfill(4)
         chars = [int(c) for c in ("".join(str(d) for d in root) + branch_str)]
 
-        # 1st DV
         s1 = sum(chars[i] * cls.WEIGHTS_DV1[i] for i in range(12))
         r1 = s1 % 11
         dv1 = 0 if r1 < 2 else 11 - r1
         chars.append(dv1)
 
-        # 2nd DV
         s2 = sum(chars[i] * cls.WEIGHTS_DV2[i] for i in range(13))
         r2 = s2 % 11
         dv2 = 0 if r2 < 2 else 11 - r2
@@ -155,7 +149,7 @@ class CNPJ(BrazilianType):
         return {
             "type": "string",
             "title": "CNPJ",
-            "description": "Brazilian legal entity registry (CNPJ) with checksum validation",
-            "examples": ["12.345.678/0001-90", "12345678000190"],
+            "description": "Cadastro Nacional da Pessoa Jurídica (CNPJ)",
+            "examples": ["12.345.678/0001-90", "12ABC345000167"],
             "pattern": r"^[A-Z0-9]{2}\.?[A-Z0-9]{3}\.?[A-Z0-9]{3}\/?[A-Z0-9]{4}-?\d{2}$",
         }

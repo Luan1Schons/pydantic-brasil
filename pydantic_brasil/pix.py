@@ -1,4 +1,4 @@
-"""Chave PIX (Brazilian Instant Payment Key) validation and formatting."""
+"""Validação e formatação de Chave PIX (Banco Central do Brasil)."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from pydantic_brasil.phone import TelefoneBR
 
 
 class PixKeyType(str, Enum):
-    """Categorization of Brazilian PIX Keys defined by the Central Bank of Brazil (Bacen)."""
+    """Categorias oficiais de Chaves PIX definidas pelo Banco Central do Brasil (Bacen)."""
 
     CPF = "CPF"
     CNPJ = "CNPJ"
@@ -25,19 +25,19 @@ class PixKeyType(str, Enum):
 
 
 class ChavePIX(BrazilianType):
-    """Brazilian Instant Payment Key (Chave PIX).
+    """Chave PIX (Sistema de Pagamentos Instantâneos do Banco Central).
 
-    Features:
-    - Automatically identifies and validates the key type:
-      * CPF: 11-digit valid CPF.
-      * CNPJ: 14-digit valid CNPJ.
-      * Email: Valid RFC 5322 e-mail address.
-      * Phone: Valid Brazilian phone (+55DD9XXXXXXXX or DD9XXXXXXXX).
-      * EVP: Valid UUID v4 random key.
-    - `.key_type`: Returns `PixKeyType` enum.
-    - `.normalized`: Returns canonical format specified by Bacen.
-    - `.formatted`: Returns formatted representation according to the key type.
-    - `.masked`: LGPD-safe masked representation.
+    Recursos:
+    - Identificação e validação automática do formato:
+      * CPF: 11 dígitos numéricos com Módulo 11.
+      * CNPJ: 14 dígitos válidos.
+      * E-mail: Endereço em conformidade com o padrão RFC 5322.
+      * Telefone: Padrão nacional brasileiro (+55DD9XXXXXXXX ou DD9XXXXXXXX).
+      * EVP: Chave aleatória em formato UUID v4.
+    - `.key_type`: Retorna enum `PixKeyType`.
+    - `.normalized`: Formato canônico especificado pelo Bacen.
+    - `.formatted`: Formatação correspondente ao tipo da chave.
+    - `.masked`: Mascaramento conforme a LGPD.
     """
 
     EMAIL_REGEX: ClassVar[re.Pattern[str]] = re.compile(
@@ -110,23 +110,24 @@ class ChavePIX(BrazilianType):
             pass
 
         raise PixKeyInvalidError(
-            f"Value '{value}' is not a valid PIX key (must be CPF, CNPJ, Email, Phone or UUID).",
+            f"O valor '{value}' não é uma chave PIX válida "
+            f"(deve ser CPF, CNPJ, E-mail, Telefone ou Chave Aleatória/UUID).",
             value=value,
         )
 
     @property
     def key_type(self) -> PixKeyType:
-        """Returns the detected PIX key type category."""
+        """Retorna a categoria/tipo identificada da chave PIX."""
         return self._key_type
 
     @property
     def normalized(self) -> str:
-        """Returns the Bacen canonical format of the key."""
+        """Retorna o formato canônico estipulado pelo Banco Central."""
         return self._normalized
 
     @property
     def formatted(self) -> str:
-        """Returns formatted string according to the key type."""
+        """Retorna a chave formatada de acordo com o seu tipo."""
         if self.key_type == PixKeyType.CPF:
             return CPF(self._normalized).formatted
         if self.key_type == PixKeyType.CNPJ:
@@ -137,7 +138,7 @@ class ChavePIX(BrazilianType):
 
     @property
     def masked(self) -> str:
-        """Returns masked string according to the key type."""
+        """Retorna a chave mascarada de acordo com a LGPD."""
         if self.key_type == PixKeyType.CPF:
             return CPF(self._normalized).masked
         if self.key_type == PixKeyType.CNPJ:
@@ -155,7 +156,7 @@ class ChavePIX(BrazilianType):
 
     @classmethod
     def generate_evp(cls) -> ChavePIX:
-        """Generates a valid random EVP (UUID v4) PIX key."""
+        """Gera uma chave aleatória EVP (UUID v4) válida."""
         return cls(str(uuid.uuid4()))
 
     @classmethod
@@ -163,7 +164,7 @@ class ChavePIX(BrazilianType):
         return {
             "type": "string",
             "title": "ChavePIX",
-            "description": "Brazilian Central Bank PIX key (CPF, CNPJ, Email, Phone, or UUID EVP)",
+            "description": "Chave PIX (CPF, CNPJ, E-mail, Telefone ou EVP Aleatória)",
             "examples": [
                 "12345678900",
                 "+5511987654321",
@@ -173,5 +174,5 @@ class ChavePIX(BrazilianType):
         }
 
 
-# English alias
+# Alias
 PixKey = ChavePIX

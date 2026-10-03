@@ -32,15 +32,13 @@ def test_cnpj_branch_filial():
 
 
 def test_cnpj_invalid_length():
-    with pytest.raises(CNPJInvalidError, match="must have exactly 14 characters"):
+    with pytest.raises(CNPJInvalidError, match="deve conter exatamente 14 caracteres"):
         CNPJ("123456780001")
 
 
 def test_cnpj_invalid_repeated_digits():
     for digit in "0123456789":
-        with pytest.raises(
-            CNPJInvalidError, match="cannot be composed of identical repeated digits"
-        ):
+        with pytest.raises(CNPJInvalidError, match="não pode conter todos os dígitos iguais"):
             CNPJ(digit * 14)
 
 
@@ -48,7 +46,7 @@ def test_cnpj_invalid_checksum():
     valid = CNPJ.generate()
     wrong_last = str((int(valid[-1]) + 1) % 10)
     bad_cnpj = valid[:-1] + wrong_last
-    with pytest.raises(CNPJInvalidError, match="Invalid CNPJ checksum"):
+    with pytest.raises(CNPJInvalidError, match="dígito verificador inválido"):
         CNPJ(bad_cnpj)
 
 

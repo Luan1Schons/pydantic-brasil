@@ -10,17 +10,15 @@
 
 **Tipos de dados e validadores brasileiros modernos e de alta performance desenvolvidos nativamente para Pydantic v2 e FastAPI.**
 
-*English version available in [README.en.md](README.en.md).*
-
 ---
 
-## ⚡ Por que usar o pydantic-brasil?
+## 💡 Por que usar o pydantic-brasil?
 
-- **⚡ Desenvolvido nativamente para Pydantic v2**: Conectado diretamente ao núcleo `pydantic-core` via `__get_pydantic_core_schema__`, sem hacks ou regexes lentas de pré-validação.
+- **🚀 Desenvolvido nativamente para Pydantic v2**: Conectado diretamente ao núcleo `pydantic-core` via `__get_pydantic_core_schema__`, sem hacks ou regexes lentas de pré-validação.
 - **🛡️ Pronto para o CNPJ Alfanumérico 2026**: Compatibilidade completa tanto com o CNPJ numérico tradicional quanto com o novo padrão alfanumérico regulamentado pela Receita Federal do Brasil.
 - **🔒 Mascaramento em conformidade com a LGPD**: Propriedade `.masked` nativa em todos os documentos (`123.***.***-00`) para exibição em interfaces, logs seguros e telemetria.
 - **🗄️ Otimizado para Bancos de Dados**: `model_dump()` serializa documentos, telefones e CEPs diretamente em dígitos puros e desformatados (`"12345678900"`), permitindo indexação eficiente em PostgreSQL, MySQL, SQLite e MongoDB.
-- **🚀 Zero Dependências Externas**: Utiliza apenas `pydantic>=2.0.0` e `typing-extensions`. Não traz pacotes pesados ou desatualizados.
+- **📦 Sem Dependências Externas**: Construído unicamente sobre `pydantic>=2.0.0` e `typing-extensions`. Não traz pacotes pesados ou desatualizados.
 - **🎯 100% Tipado (PEP 561)**: Total compatibilidade com IDEs (VS Code, Cursor, PyCharm) e checadores estritos como `mypy --strict` e `pyright`.
 - **🧪 Geradores de Dados Válidos para Testes**: Todos os documentos contam com `.generate()` para acelerar a criação de fixtures e testes automatizados.
 - **🌐 Suporte OpenAPI / FastAPI**: Documentação interativa Swagger UI (`/docs`) e Redoc geradas automaticamente com exemplos e descrições ricas.
@@ -267,7 +265,7 @@ print(total.formatted)  # "R$ 1.255,40"
 ```python
 from pydantic_brasil import BancoBR
 
-# Por código numérico com preenchimento de zeros
+# Por código numérico (ex: 1 é normalizado para "001")
 banco1 = BancoBR(1)          # Banco do Brasil ("001")
 banco2 = BancoBR("260")      # Nubank
 banco3 = BancoBR("Inter")    # Busca por nome -> "077"

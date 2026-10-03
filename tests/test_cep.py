@@ -38,7 +38,7 @@ def test_cep_states_mapping():
 
 
 def test_cep_invalid_length():
-    with pytest.raises(CEPInvalidError, match="must have exactly 8 numerical digits"):
+    with pytest.raises(CEPInvalidError, match="deve conter exatamente 8 dígitos"):
         CEP("12345")
 
     with pytest.raises(CEPInvalidError):
@@ -53,7 +53,7 @@ def test_cep_generate():
     assert rj_cep.state == "RJ"
     assert "-" in str(rj_cep)
 
-    with pytest.raises(ValueError, match="Unknown Brazilian state"):
+    with pytest.raises(ValueError, match="Estado .* desconhecido"):
         CEP.generate(state="ZZ")
 
 

@@ -1,4 +1,4 @@
-"""CNJ Judicial Process Number (Numeração Única CNJ) validation and formatting."""
+"""Validação e formatação de Processo Judicial CNJ (Numeração Única)."""
 
 from __future__ import annotations
 
@@ -10,16 +10,15 @@ from pydantic_brasil.exceptions import ProcessoCNJInvalidError
 
 
 class ProcessoCNJ(BrazilianType):
-    """Brazilian CNJ Judicial Process Number (Numeração Única de Processos Judiciais).
+    """Numeração Única de Processos Judiciais (Resolução CNJ nº 65/2008).
 
-    Established by Resolução CNJ nº 65/2008:
-    Format: NNNNNNN-DD.AAAA.J.TR.OOOO (20 digits).
-    - NNNNNNN: 7-digit sequential process number
-    - DD: 2-digit verification checksum (Modulo 97 - ISO 7064)
-    - AAAA: 4-digit filing year
-    - J: 1-digit judicial segment (e.g. 8 for State Court, 4 for Federal Court)
-    - TR: 2-digit tribunal / region identifier
-    - OOOO: 4-digit court unit / origin identifier
+    Formato de 20 dígitos: NNNNNNN-DD.AAAA.J.TR.OOOO.
+    - NNNNNNN: 7 dígitos do número sequencial no ano
+    - DD: 2 dígitos verificadores (Módulo 97 - ISO 7064)
+    - AAAA: 4 dígitos do ano de ajuizamento
+    - J: 1 dígito do segmento da Justiça (ex: 8 para Estadual, 4 para Federal)
+    - TR: 2 dígitos do tribunal / região
+    - OOOO: 4 dígitos da vara / comarca / unidade de origem
     """
 
     EXPECTED_DIGITS: ClassVar[Optional[int]] = 20
@@ -43,7 +42,7 @@ class ProcessoCNJ(BrazilianType):
 
         if len(digits) != 20:
             raise ProcessoCNJInvalidError(
-                f"Processo CNJ must have exactly 20 digits (received '{value}')",
+                f"Processo CNJ deve conter exatamente 20 dígitos (recebido '{value}')",
                 value=value,
             )
 
@@ -57,12 +56,11 @@ class ProcessoCNJ(BrazilianType):
         segment_num = int(j)
         if segment_num not in cls.SEGMENT_NAMES:
             raise ProcessoCNJInvalidError(
-                f"Invalid judicial segment '{j}' in Processo CNJ '{value}'",
+                f"Segmento da justiça '{j}' inválido no Processo CNJ '{value}'",
                 value=value,
             )
 
-        # Modulo 97 (ISO 7064) checksum validation
-        # Formula: int(f"{seq}{year}{j}{tr}{orig}00") % 97
+        # Validação matemática dos dígitos via Módulo 97 (ISO 7064)
         num_without_dv = f"{seq}{year}{j}{tr}{orig}00"
         rem = int(num_without_dv) % 97
         expected_dv = 98 - rem
@@ -70,8 +68,8 @@ class ProcessoCNJ(BrazilianType):
 
         if dv != expected_dv_str:
             raise ProcessoCNJInvalidError(
-                f"Invalid check digits in Processo CNJ '{value}' "
-                f"(expected '{expected_dv_str}', got '{dv}')",
+                f"Dígitos verificadores inválidos no Processo CNJ '{value}' "
+                f"(esperado '{expected_dv_str}', recebido '{dv}')",
                 value=value,
             )
 
@@ -79,48 +77,48 @@ class ProcessoCNJ(BrazilianType):
 
     @property
     def sequential(self) -> str:
-        """Returns the 7-digit sequential process number."""
+        """Retorna o número sequencial com 7 dígitos."""
         return self.digits[:7]
 
     @property
     def check_digits(self) -> str:
-        """Returns the 2 check digits (DD)."""
+        """Retorna os 2 dígitos verificadores (DD)."""
         return self.digits[7:9]
 
     @property
     def year(self) -> int:
-        """Returns the 4-digit filing year (AAAA)."""
+        """Retorna o ano de ajuizamento (AAAA)."""
         return int(self.digits[9:13])
 
     @property
     def segment_id(self) -> int:
-        """Returns the 1-digit judicial segment identifier (J)."""
+        """Retorna o identificador do segmento judiciário (J)."""
         return int(self.digits[13])
 
     @property
     def segment_name(self) -> str:
-        """Returns the descriptive name of the judicial segment."""
+        """Retorna o nome por extenso do segmento da Justiça."""
         return self.SEGMENT_NAMES.get(self.segment_id, "Desconhecido")
 
     @property
     def tribunal(self) -> str:
-        """Returns the 2-digit tribunal / region identifier (TR)."""
+        """Retorna o identificador do tribunal / região (TR)."""
         return self.digits[14:16]
 
     @property
     def origin(self) -> str:
-        """Returns the 4-digit court origin identifier (OOOO)."""
+        """Retorna o código da vara / comarca de origem (OOOO)."""
         return self.digits[16:20]
 
     @property
     def formatted(self) -> str:
-        """Returns standard formatted Processo CNJ (NNNNNNN-DD.AAAA.J.TR.OOOO)."""
+        """Retorna o Processo CNJ formatado: `NNNNNNN-DD.AAAA.J.TR.OOOO`."""
         d = self.digits
         return f"{d[:7]}-{d[7:9]}.{d[9:13]}.{d[13]}.{d[14:16]}.{d[16:]}"
 
     @property
     def masked(self) -> str:
-        """Returns LGPD-safe masked Processo CNJ (NNNNNNN-DD.AAAA.*.**.OOOO)."""
+        """Retorna o Processo CNJ mascarado conforme a LGPD: `NNNNNNN-DD.AAAA.*.**.OOOO`."""
         d = self.digits
         return f"{d[:7]}-{d[7:9]}.{d[9:13]}.*.**.{d[16:]}"
 
@@ -133,7 +131,7 @@ class ProcessoCNJ(BrazilianType):
         origin: int = 100,
         formatted: bool = False,
     ) -> ProcessoCNJ:
-        """Generates a valid Processo CNJ number for testing purposes."""
+        """Gera um número de Processo CNJ válido para testes."""
         yr = year or random.randint(2000, 2026)
         seq_num = random.randint(1, 9999999)
         seq_str = f"{seq_num:07d}"

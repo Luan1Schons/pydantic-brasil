@@ -1,4 +1,4 @@
-"""Cartão Nacional de Saúde (CNS / SUS) validation and formatting."""
+"""Validação e formatação de Cartão Nacional de Saúde (CNS / SUS)."""
 
 from __future__ import annotations
 
@@ -10,12 +10,13 @@ from pydantic_brasil.exceptions import CNSInvalidError
 
 
 class CNS(BrazilianType):
-    """Brazilian National Health Card (Cartão Nacional de Saúde - SUS).
+    """Cartão Nacional de Saúde (CNS / SUS).
 
-    Validates according to DATASUS / Ministério da Saúde specifications:
-    - 15 digits starting with 1, 2, 7, 8, or 9.
-    - Definitive numbers (starting with 1 or 2) use an 11-digit base with Modulo 11 check.
-    - Provisory numbers (starting with 7, 8, or 9) use a 15-digit weighted sum modulo 11 check.
+    Validação em conformidade com as normas do DATASUS e Ministério da Saúde:
+    - 15 dígitos iniciados com 1, 2, 7, 8 ou 9.
+    - Números definitivos (iniciados com 1 ou 2) utilizam base de 11 dígitos com Módulo 11.
+    - Números provisórios (iniciados com 7, 8 ou 9) utilizam validação ponderada
+      sobre os 15 dígitos.
     """
 
     EXPECTED_DIGITS: ClassVar[Optional[int]] = 15
@@ -27,19 +28,19 @@ class CNS(BrazilianType):
 
         if len(digits) != 15:
             raise CNSInvalidError(
-                f"CNS must have exactly 15 digits (received '{value}')",
+                f"CNS deve conter exatamente 15 dígitos numéricos (recebido '{value}')",
                 value=value,
             )
 
         first_digit = digits[0]
         if first_digit not in ("1", "2", "7", "8", "9"):
             raise CNSInvalidError(
-                f"CNS must start with 1, 2, 7, 8, or 9 (received '{value}')",
+                f"CNS deve iniciar com 1, 2, 7, 8 ou 9 (recebido '{value}')",
                 value=value,
             )
 
         if first_digit in ("1", "2"):
-            # Definitive CNS
+            # CNS definitivo
             s = sum(int(digits[i]) * (15 - i) for i in range(11))
             rem = s % 11
             dv = 11 - rem
@@ -56,15 +57,15 @@ class CNS(BrazilianType):
 
             if digits[11:] != expected_suffix:
                 raise CNSInvalidError(
-                    f"Invalid checksum for definitive CNS '{value}'",
+                    f"Dígito verificador inválido para o CNS definitivo '{value}'",
                     value=value,
                 )
         else:
-            # Provisory CNS (starts with 7, 8, or 9)
+            # CNS provisório (iniciado com 7, 8 ou 9)
             total = sum(int(digits[i]) * (15 - i) for i in range(15))
             if total % 11 != 0:
                 raise CNSInvalidError(
-                    f"Invalid checksum for provisory CNS '{value}'",
+                    f"Validação inválida para o CNS provisório '{value}'",
                     value=value,
                 )
 
@@ -72,29 +73,29 @@ class CNS(BrazilianType):
 
     @property
     def is_definitivo(self) -> bool:
-        """Returns True if the CNS is definitive (starts with 1 or 2)."""
+        """Retorna True se for um CNS definitivo (iniciado com 1 ou 2)."""
         return self.digits[0] in ("1", "2")
 
     @property
     def is_provisorio(self) -> bool:
-        """Returns True if the CNS is provisory (starts with 7, 8, or 9)."""
+        """Retorna True se for um CNS provisório (iniciado com 7, 8 ou 9)."""
         return self.digits[0] in ("7", "8", "9")
 
     @property
     def formatted(self) -> str:
-        """Returns standard formatted CNS (XXX XXXX XXXX XXXX)."""
+        """Retorna o CNS formatado: `XXX XXXX XXXX XXXX`."""
         d = self.digits
         return f"{d[:3]} {d[3:7]} {d[7:11]} {d[11:]}"
 
     @property
     def masked(self) -> str:
-        """Returns LGPD-compliant masked CNS (XXX **** **** XXXX)."""
+        """Retorna o CNS mascarado para conformidade com a LGPD: `XXX **** **** XXXX`."""
         d = self.digits
         return f"{d[:3]} **** **** {d[11:]}"
 
     @classmethod
     def generate(cls, definitivo: bool = True, formatted: bool = False) -> CNS:
-        """Generates a valid CNS number for testing purposes."""
+        """Gera um CNS válido para testes."""
         if definitivo:
             first_digit = random.choice([1, 2])
             body = [first_digit] + [random.randint(0, 9) for _ in range(10)]
@@ -116,8 +117,6 @@ class CNS(BrazilianType):
             while True:
                 candidate = [first_digit] + [random.randint(0, 9) for _ in range(13)]
                 s = sum(candidate[i] * (15 - i) for i in range(14))
-                # Last weight is (15 - 14) = 1
-                # (s + last_digit * 1) % 11 == 0  =>  last_digit = (11 - (s % 11)) % 11
                 last_digit = (11 - (s % 11)) % 11
                 if last_digit < 10:
                     raw = "".join(str(d) for d in candidate) + str(last_digit)

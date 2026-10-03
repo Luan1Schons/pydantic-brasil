@@ -1,4 +1,4 @@
-"""Polymorphic Brazilian document (CPF or CNPJ)."""
+"""Documento fiscal brasileiro polimórfico (CPF ou CNPJ)."""
 
 from __future__ import annotations
 
@@ -12,10 +12,10 @@ from pydantic_brasil.exceptions import BrazilianValidationError
 
 
 class CPFouCNPJ(BrazilianType):
-    """Polymorphic Brazilian taxpayer document (accepts either CPF or CNPJ).
+    """Documento de identificação fiscal brasileiro (aceita CPF ou CNPJ).
 
-    Automatically detects whether the input is a CPF or CNPJ and executes the
-    appropriate checksum and constraint validations.
+    Identifica automaticamente se a entrada é um CPF ou CNPJ e executa
+    as respectivas regras e validações matemáticas de dígitos verificadores.
     """
 
     _inner: Union[CPF, CNPJ]
@@ -42,7 +42,7 @@ class CPFouCNPJ(BrazilianType):
         digits = cls._extract_digits(value)
         raw_alphanumeric = re.sub(r"[\.\/\-\s]", "", value.upper())
 
-        # Check for CPF (11 digits, or int <= 11)
+        # Verifica se é CPF (11 dígitos numéricos)
         if len(digits) == 11 or (digits.isdigit() and len(digits) <= 11 and "/" not in value):
             try:
                 return CPF(value)
@@ -50,45 +50,45 @@ class CPFouCNPJ(BrazilianType):
                 if len(raw_alphanumeric) != 14:
                     raise e_cpf
 
-        # Check for CNPJ (14 characters or containing /)
+        # Verifica se é CNPJ (14 caracteres ou barra presente)
         try:
             return CNPJ(value)
         except Exception as e_cnpj:
             raise BrazilianValidationError(
-                f"Value '{value}' is neither a valid CPF nor a valid CNPJ.",
+                f"O valor '{value}' não é um CPF nem um CNPJ válido.",
                 value=value,
             ) from e_cnpj
 
     @property
     def is_cpf(self) -> bool:
-        """Returns True if this document is a CPF."""
+        """Retorna True se for um CPF."""
         return isinstance(self._inner, CPF)
 
     @property
     def is_cnpj(self) -> bool:
-        """Returns True if this document is a CNPJ."""
+        """Retorna True se for um CNPJ."""
         return isinstance(self._inner, CNPJ)
 
     def as_cpf(self) -> CPF:
-        """Returns the document as a typed CPF instance, or raises ValueError."""
+        """Retorna a instância como CPF tipado ou lança ValueError."""
         if not self.is_cpf:
-            raise ValueError(f"Document '{self}' is a CNPJ, not a CPF")
+            raise ValueError(f"O documento '{self}' é um CNPJ, não um CPF")
         return self._inner  # type: ignore[return-value]
 
     def as_cnpj(self) -> CNPJ:
-        """Returns the document as a typed CNPJ instance, or raises ValueError."""
+        """Retorna a instância como CNPJ tipado ou lança ValueError."""
         if not self.is_cnpj:
-            raise ValueError(f"Document '{self}' is a CPF, not a CNPJ")
+            raise ValueError(f"O documento '{self}' é um CPF, não um CNPJ")
         return self._inner  # type: ignore[return-value]
 
     @property
     def formatted(self) -> str:
-        """Returns standard punctuated string (CPF: 000.000.000-00, CNPJ: 00.000.000/0000-00)."""
+        """Retorna o documento formatado."""
         return self._inner.formatted
 
     @property
     def masked(self) -> str:
-        """Returns LGPD-compliant masked document string."""
+        """Retorna o documento mascarado em conformidade com a LGPD."""
         return self._inner.masked
 
     @classmethod
@@ -97,11 +97,11 @@ class CPFouCNPJ(BrazilianType):
             "type": "string",
             "title": "CPFouCNPJ",
             "description": (
-                "Brazilian taxpayer identifier: either a valid CPF (11 digits) or CNPJ (14 digits)"
+                "Documento de identificação fiscal: CPF (11 dígitos) ou CNPJ (14 dígitos)"
             ),
             "examples": ["123.456.789-00", "12.345.678/0001-90"],
         }
 
 
-# Alias for readability
+# Alias
 DocumentoBR = CPFouCNPJ

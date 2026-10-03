@@ -1,4 +1,4 @@
-"""CEP (Código de Endereçamento Postal) validation and formatting."""
+"""Validação e formatação de CEP (Código de Endereçamento Postal)."""
 
 from __future__ import annotations
 
@@ -10,20 +10,20 @@ from pydantic_brasil.exceptions import CEPInvalidError
 
 
 class CEP(BrazilianType):
-    """Brazilian postal code (Código de Endereçamento Postal - CEP).
+    """Código de Endereçamento Postal (CEP).
 
-    Features:
-    - Exactly 8 numerical digits.
-    - Identification of Brazilian State (UF) based on official Correios numbering ranges.
+    Recursos:
+    - Validação de 8 dígitos numéricos.
+    - Inferência automática da UF (estado) a partir da faixa postal dos Correios.
     - `.formatted`: `01310-100`.
     - `.masked`: `01310-***`.
-    - `.state`: Brazilian state abbreviation (e.g. 'SP', 'RJ', 'MG').
-    - `CEP.generate(state='SP', formatted=True)`: Test data generator.
+    - `.state`: Sigla da UF do estado (ex: 'SP', 'RJ', 'MG').
+    - `CEP.generate(state='SP', formatted=True)`: Gerador para testes.
     """
 
     EXPECTED_DIGITS: ClassVar[Optional[int]] = 8
 
-    # Official Correios Postal ranges: (min_5_digits, max_5_digits, UF)
+    # Faixas de CEP oficiais dos Correios: (min_5_digitos, max_5_digitos, UF)
     RANGES: ClassVar[List[Tuple[int, int, str]]] = [
         (1000, 19999, "SP"),
         (20000, 28999, "RJ"),
@@ -63,7 +63,7 @@ class CEP(BrazilianType):
 
         if len(digits) != 8:
             raise CEPInvalidError(
-                f"CEP must have exactly 8 numerical digits (received {len(digits)})",
+                f"CEP deve conter exatamente 8 dígitos numéricos (recebido {len(digits)})",
                 value=value,
             )
 
@@ -71,19 +71,19 @@ class CEP(BrazilianType):
 
     @property
     def formatted(self) -> str:
-        """Returns standard punctuated CEP string: `00000-000`."""
+        """Retorna o CEP formatado: `00000-000`."""
         d = self.digits
         return f"{d[:5]}-{d[5:]}"
 
     @property
     def masked(self) -> str:
-        """Returns partially masked CEP string: `00000-***`."""
+        """Retorna o CEP mascarado: `00000-***`."""
         d = self.digits
         return f"{d[:5]}-***"
 
     @property
     def state(self) -> Optional[str]:
-        """Returns the Brazilian state (UF) corresponding to this CEP prefix, if known."""
+        """Retorna a sigla da UF correspondente à faixa postal, se identificada."""
         prefix_5 = int(self.digits[:5])
         for min_val, max_val, uf in self.RANGES:
             if min_val <= prefix_5 <= max_val:
@@ -92,17 +92,17 @@ class CEP(BrazilianType):
 
     @classmethod
     def generate(cls, state: Optional[str] = None, formatted: bool = False) -> CEP:
-        """Generates a valid CEP for testing purposes.
+        """Gera um CEP válido para testes.
 
         Args:
-            state: Optional state UF (e.g. 'SP', 'RJ'). If given, generates a CEP within that state.
-            formatted: If True, returns formatted string; otherwise 8 digits.
+            state: Sigla da UF opcional (ex: 'SP', 'RJ').
+            formatted: Se verdadeiro, retorna com pontuação; senão, 8 dígitos.
         """
         if state is not None:
             uf = state.upper().strip()
             matching_ranges = [r for r in cls.RANGES if r[2] == uf]
             if not matching_ranges:
-                raise ValueError(f"Unknown Brazilian state UF: {state}")
+                raise ValueError(f"Estado (UF) desconhecido: {state}")
             chosen_range = random.choice(matching_ranges)
             prefix_5 = random.randint(chosen_range[0], chosen_range[1])
         else:
@@ -119,7 +119,7 @@ class CEP(BrazilianType):
         return {
             "type": "string",
             "title": "CEP",
-            "description": "Brazilian Postal Code (Código de Endereçamento Postal)",
+            "description": "Código de Endereçamento Postal (CEP)",
             "examples": ["01310-100", "01310100"],
             "pattern": r"^\d{5}-?\d{3}$",
         }

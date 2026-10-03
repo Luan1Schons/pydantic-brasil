@@ -27,15 +27,13 @@ def test_cpf_valid_punctuated():
 
 
 def test_cpf_invalid_length():
-    with pytest.raises(CPFInvalidError, match="must have exactly 11 numerical digits"):
+    with pytest.raises(CPFInvalidError, match="deve conter exatamente 11 dígitos"):
         CPF("123456789")
 
 
 def test_cpf_invalid_repeated_digits():
     for digit in "0123456789":
-        with pytest.raises(
-            CPFInvalidError, match="cannot be composed of identical repeated digits"
-        ):
+        with pytest.raises(CPFInvalidError, match="não pode conter todos os dígitos iguais"):
             CPF(digit * 11)
 
 
@@ -44,7 +42,7 @@ def test_cpf_invalid_checksum():
     valid = CPF.generate()
     wrong_last_digit = str((int(valid.digits[-1]) + 1) % 10)
     bad_cpf = valid.digits[:-1] + wrong_last_digit
-    with pytest.raises(CPFInvalidError, match="Invalid CPF checksum"):
+    with pytest.raises(CPFInvalidError, match="dígito verificador inválido"):
         CPF(bad_cpf)
 
 
@@ -88,8 +86,8 @@ def test_cpf_equality_and_hash():
 
 
 def test_cpf_generate_unknown_state():
-    with pytest.raises(ValueError, match="Unknown Brazilian state"):
+    with pytest.raises(ValueError, match="Estado .* desconhecido"):
         CPF.generate(state="XX")
 
-    with pytest.raises(ValueError, match="State digit must be between 0 and 9"):
+    with pytest.raises(ValueError, match="O dígito do estado deve estar entre 0 e 9"):
         CPF.generate(state=15)

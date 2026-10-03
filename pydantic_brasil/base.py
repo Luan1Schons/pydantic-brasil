@@ -1,4 +1,4 @@
-"""Base class for all Brazilian value objects in pydantic-brasil."""
+"""Classe base para todos os tipos de dados e objetos de valor brasileiros."""
 
 from __future__ import annotations
 
@@ -11,10 +11,10 @@ from pydantic_core import CoreSchema, core_schema
 
 
 class BrazilianType(str, ABC):
-    """Abstract base class for Brazilian documents, numbers, and value objects.
+    """Classe base abstrata para documentos, códigos e valores brasileiros.
 
-    Subclasses inherit from `str` for seamless JSON serialization and interoperability,
-    while offering rich value-object methods such as `.digits`, `.formatted`, and `.masked`.
+    Herda de `str` para interoperabilidade e serialização direta em JSON,
+    oferecendo métodos avançados como `.digits`, `.formatted` e `.masked`.
     """
 
     EXPECTED_DIGITS: ClassVar[Optional[int]] = None
@@ -31,30 +31,30 @@ class BrazilianType(str, ABC):
 
     @classmethod
     def _clean_input(cls, value: Any) -> str:
-        """Converts input to string and strips leading/trailing whitespace.
+        """Converte a entrada para texto e remove espaços no início e fim.
 
-        Pads integers with leading zeros if EXPECTED_DIGITS is defined.
+        Preenche inteiros com 0 à esquerda caso EXPECTED_DIGITS esteja definido.
         """
         if value is None:
-            raise TypeError("Value cannot be None")
+            raise TypeError("Valor não pode ser nulo (None)")
         if isinstance(value, int) and cls.EXPECTED_DIGITS is not None:
             return str(value).zfill(cls.EXPECTED_DIGITS)
         return str(value).strip()
 
     @classmethod
     def _extract_digits(cls, value: str) -> str:
-        """Extracts only decimal digits from the string."""
+        """Extrai apenas os dígitos numéricos da sequência."""
         return re.sub(r"\D", "", value)
 
     @classmethod
     @abstractmethod
     def _validate(cls, value: str) -> str:
-        """Validates the input string and returns the canonical or valid value."""
+        """Valida a entrada e retorna o valor canônico ou validado."""
         raise NotImplementedError
 
     @property
     def digits(self) -> str:
-        """Returns only the numerical digits of the document/code."""
+        """Retorna apenas os dígitos numéricos do documento ou código."""
         if not hasattr(self, "_digits"):
             self._digits = self._extract_digits(str(self))
         return self._digits
@@ -62,19 +62,19 @@ class BrazilianType(str, ABC):
     @property
     @abstractmethod
     def formatted(self) -> str:
-        """Returns the document formatted with standard Brazilian punctuation."""
+        """Retorna o documento formatado na pontuação oficial brasileira."""
         raise NotImplementedError
 
     @property
     @abstractmethod
     def masked(self) -> str:
-        """Returns the document with sensitive digits hidden for LGPD compliance."""
+        """Retorna o documento mascarado para conformidade com a LGPD."""
         raise NotImplementedError
 
     def __eq__(self, other: object) -> bool:
-        """Smart equality comparison.
+        """Comparação inteligente de igualdade.
 
-        Allows comparing with another BrazilianType, pure digits, or formatted strings.
+        Permite comparar instâncias entre si, com dígitos puros ou strings formatadas.
         """
         if isinstance(other, BrazilianType):
             return self.digits == other.digits
@@ -90,18 +90,18 @@ class BrazilianType(str, ABC):
 
     @classmethod
     def openapi_schema_extra(cls) -> Dict[str, Any]:
-        """Provides OpenAPI documentation metadata for FastAPI Swagger/ReDoc."""
+        """Fornece metadados de documentação OpenAPI para o Swagger e Redoc do FastAPI."""
         return {
             "type": "string",
             "title": cls.__name__,
-            "description": f"Valid Brazilian {cls.__name__}",
+            "description": f"Documento brasileiro válido do tipo {cls.__name__}",
         }
 
     @classmethod
     def __get_pydantic_core_schema__(
         cls, source_type: Any, handler: GetCoreSchemaHandler
     ) -> CoreSchema:
-        """Generates Pydantic v2 core schema with zero-overhead validation."""
+        """Gera o schema do pydantic-core para validação nativa de alta performance."""
         return core_schema.json_or_python_schema(
             json_schema=core_schema.chain_schema(
                 [
@@ -132,7 +132,7 @@ class BrazilianType(str, ABC):
     def __get_pydantic_json_schema__(
         cls, _core_schema: CoreSchema, handler: GetJsonSchemaHandler
     ) -> Dict[str, Any]:
-        """Injects custom JSON Schema and OpenAPI documentation into FastAPI schemas."""
+        """Injeta metadados de JSON Schema e OpenAPI nas rotas do FastAPI."""
         json_schema = handler(core_schema.str_schema())
         json_schema.update(cls.openapi_schema_extra())
         return json_schema

@@ -37,21 +37,21 @@ def test_phone_with_country_code():
 
 
 def test_phone_invalid_ddd():
-    with pytest.raises(PhoneInvalidError, match="Invalid Brazilian area code"):
+    with pytest.raises(PhoneInvalidError, match="DDD .* inválido"):
         TelefoneBR("00987654321")
 
-    with pytest.raises(PhoneInvalidError, match="Invalid Brazilian area code"):
+    with pytest.raises(PhoneInvalidError, match="DDD .* inválido"):
         TelefoneBR("20987654321")
 
 
 def test_phone_invalid_mobile_digit():
-    # Mobile with 11 digits but not starting with 9
-    with pytest.raises(PhoneInvalidError, match="must start with digit '9'"):
+    # Celular com 11 dígitos mas sem iniciar com 9
+    with pytest.raises(PhoneInvalidError, match="deve iniciar com o dígito '9'"):
         TelefoneBR("11887654321")
 
 
 def test_phone_invalid_length():
-    with pytest.raises(PhoneInvalidError, match="must have 10.*or 11.*digits"):
+    with pytest.raises(PhoneInvalidError, match="deve ter 10.*ou 11.*dígitos"):
         TelefoneBR("119876")
 
 

@@ -1,4 +1,4 @@
-"""CPF (Cadastro de Pessoas Físicas) validation and formatting."""
+"""Validação e formatação de CPF (Cadastro de Pessoas Físicas)."""
 
 from __future__ import annotations
 
@@ -10,16 +10,16 @@ from pydantic_brasil.exceptions import CPFInvalidError
 
 
 class CPF(BrazilianType):
-    """Brazilian individual taxpayer registry (Cadastro de Pessoas Físicas - CPF).
+    """Cadastro de Pessoas Físicas (CPF).
 
-    Features:
-    - Official Modulo 11 verification digits calculation.
-    - Rejection of repeated sequential digits (e.g., 111.111.111-11).
-    - `.formatted`: Formats with standard punctuation: `123.456.789-00`.
-    - `.masked`: LGPD-compliant masking: `***.456.789-**`.
-    - `.digits`: Pure 11 numerical digits string: `12345678900`.
-    - `.fiscal_region`: Federal Revenue fiscal region (states) of issuance based on 9th digit.
-    - `CPF.generate(state='SP', formatted=True)`: Test data generator.
+    Recursos:
+    - Validação matemática oficial dos dígitos verificadores (Módulo 11).
+    - Rejeição de sequências com todos os dígitos repetidos (ex: 111.111.111-11).
+    - `.formatted`: Formatação padrão: `123.456.789-00`.
+    - `.masked`: Mascaramento conforme a LGPD: `***.456.789-**`.
+    - `.digits`: Dígitos numéricos puros: `12345678900`.
+    - `.fiscal_region`: Região fiscal da Receita Federal (estados) de emissão (9º dígito).
+    - `CPF.generate(state='SP', formatted=True)`: Gerador de dados válidos para testes.
     """
 
     EXPECTED_DIGITS: ClassVar[Optional[int]] = 11
@@ -47,34 +47,33 @@ class CPF(BrazilianType):
 
         if len(digits) != 11:
             raise CPFInvalidError(
-                f"CPF must have exactly 11 numerical digits (received {len(digits)})",
+                f"CPF deve conter exatamente 11 dígitos numéricos (recebido {len(digits)})",
                 value=value,
             )
 
-        # Disallow sequences of repeated digits
         if len(set(digits)) == 1:
             raise CPFInvalidError(
-                f"CPF cannot be composed of identical repeated digits: '{value}'",
+                f"CPF não pode conter todos os dígitos iguais: '{value}'",
                 value=value,
             )
 
-        # Verify first check digit
+        # Primeiro dígito verificador
         s1 = sum(int(digits[i]) * (10 - i) for i in range(9))
         d1 = 11 - (s1 % 11)
         dv1 = 0 if d1 >= 10 else d1
         if int(digits[9]) != dv1:
             raise CPFInvalidError(
-                f"Invalid CPF checksum digit 1 (expected {dv1}, got {digits[9]})",
+                f"Primeiro dígito verificador inválido para o CPF '{value}'",
                 value=value,
             )
 
-        # Verify second check digit
+        # Segundo dígito verificador
         s2 = sum(int(digits[i]) * (11 - i) for i in range(10))
         d2 = 11 - (s2 % 11)
         dv2 = 0 if d2 >= 10 else d2
         if int(digits[10]) != dv2:
             raise CPFInvalidError(
-                f"Invalid CPF checksum digit 2 (expected {dv2}, got {digits[10]})",
+                f"Segundo dígito verificador inválido para o CPF '{value}'",
                 value=value,
             )
 
@@ -82,29 +81,29 @@ class CPF(BrazilianType):
 
     @property
     def formatted(self) -> str:
-        """Returns standard punctuated CPF string: `000.000.000-00`."""
+        """Retorna o CPF formatado: `000.000.000-00`."""
         d = self.digits
         return f"{d[:3]}.{d[3:6]}.{d[6:9]}-{d[9:]}"
 
     @property
     def masked(self) -> str:
-        """Returns LGPD-safe masked CPF string: `***.000.000-**`."""
+        """Retorna o CPF mascarado para conformidade com a LGPD: `***.000.000-**`."""
         d = self.digits
         return f"***.{d[3:6]}.{d[6:9]}-**"
 
     @property
     def fiscal_region(self) -> List[str]:
-        """Returns the list of Brazilian states (UFs) corresponding to the 9th digit."""
+        """Retorna a lista de estados (UFs) da Região Fiscal emissora (9º dígito)."""
         digit = int(self.digits[8])
         return self.FISCAL_REGIONS[digit]
 
     @classmethod
     def generate(cls, state: Optional[Union[str, int]] = None, formatted: bool = False) -> CPF:
-        """Generates a valid CPF for testing purposes.
+        """Gera um CPF válido para testes.
 
         Args:
-            state: Optional state abbreviation (e.g. 'SP', 'RJ') or 9th digit (0-9).
-            formatted: If True, returns punctuated string; otherwise 11 digits.
+            state: Sigla da UF (ex: 'SP', 'RJ') ou dígito da região fiscal (0 a 9).
+            formatted: Se verdadeiro, retorna formatado com pontuação; caso contrário, dígitos.
         """
         digits = [random.randint(0, 9) for _ in range(8)]
 
@@ -112,22 +111,20 @@ class CPF(BrazilianType):
             if isinstance(state, str):
                 uf = state.upper().strip()
                 if uf not in cls.STATE_TO_DIGIT:
-                    raise ValueError(f"Unknown Brazilian state UF: {state}")
+                    raise ValueError(f"Estado (UF) desconhecido: {state}")
                 digits.append(cls.STATE_TO_DIGIT[uf])
             elif isinstance(state, int):
                 if not (0 <= state <= 9):
-                    raise ValueError("State digit must be between 0 and 9")
+                    raise ValueError("O dígito do estado deve estar entre 0 e 9")
                 digits.append(state)
         else:
             digits.append(random.randint(0, 9))
 
-        # First check digit
         s1 = sum(digits[i] * (10 - i) for i in range(9))
         d1 = 11 - (s1 % 11)
         dv1 = 0 if d1 >= 10 else d1
         digits.append(dv1)
 
-        # Second check digit
         s2 = sum(digits[i] * (11 - i) for i in range(10))
         d2 = 11 - (s2 % 11)
         dv2 = 0 if d2 >= 10 else d2
@@ -142,7 +139,7 @@ class CPF(BrazilianType):
         return {
             "type": "string",
             "title": "CPF",
-            "description": "Brazilian individual taxpayer registry (CPF) with checksum validation",
+            "description": "Cadastro de Pessoas Físicas (CPF) com validação de dígitos",
             "examples": ["123.456.789-00", "12345678900"],
             "pattern": r"^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$",
         }

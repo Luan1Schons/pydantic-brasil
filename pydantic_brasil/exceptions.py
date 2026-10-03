@@ -1,10 +1,10 @@
-"""Custom exceptions for pydantic-brasil."""
+"""Exceções customizadas para erros de validação em pydantic-brasil."""
 
 from typing import Any, Optional
 
 
 class BrazilianValidationError(ValueError):
-    """Base exception for Brazilian document validation errors."""
+    """Exceção base para erros de validação de documentos e tipos brasileiros."""
 
     def __init__(self, message: str, value: Optional[Any] = None) -> None:
         super().__init__(message)
@@ -16,64 +16,64 @@ class BrazilianValidationError(ValueError):
 
 
 class CPFInvalidError(BrazilianValidationError):
-    """Raised when a CPF is invalid (bad length, bad checksum or repeated digits)."""
+    """Lançada quando um CPF é inválido (tamanho incorreto, dígito verificador ou repetido)."""
 
 
 class CNPJInvalidError(BrazilianValidationError):
-    """Raised when a CNPJ is invalid (bad length, bad checksum or invalid characters)."""
+    """Lançada quando um CNPJ é inválido (tamanho, dígito verificador ou caracteres inválidos)."""
 
 
 class CEPInvalidError(BrazilianValidationError):
-    """Raised when a CEP is invalid (must have 8 digits)."""
+    """Lançada quando um CEP é inválido (deve conter 8 dígitos numéricos)."""
 
 
 class PhoneInvalidError(BrazilianValidationError):
-    """Raised when a Brazilian phone number is invalid (bad DDD or invalid digit count)."""
+    """Lançada quando um telefone é inválido (DDD inexistente ou quantidade de dígitos)."""
 
 
 class PixKeyInvalidError(BrazilianValidationError):
-    """Raised when a PIX key does not match any valid format (CPF, CNPJ, Email, Phone, EVP)."""
+    """Lançada quando uma chave PIX não atende a nenhum formato oficial do Bacen."""
 
 
 class VehiclePlateInvalidError(BrazilianValidationError):
-    """Raised when a license plate is invalid (neither standard nor Mercosul)."""
+    """Lançada quando uma placa veicular é inválida (nem padrão tradicional nem Mercosul)."""
 
 
 class RenavamInvalidError(BrazilianValidationError):
-    """Raised when a RENAVAM is invalid (bad checksum or length)."""
+    """Lançada quando um RENAVAM é inválido (dígito verificador ou tamanho incorreto)."""
 
 
 class CNHInvalidError(BrazilianValidationError):
-    """Raised when a CNH is invalid (bad checksum or length)."""
+    """Lançada quando uma CNH é inválida (duplo dígito verificador ou tamanho incorreto)."""
 
 
 class StateRegistrationInvalidError(BrazilianValidationError):
-    """Raised when an Inscrição Estadual (IE) is invalid for the specified UF."""
+    """Lançada quando uma Inscrição Estadual é inválida para a UF especificada."""
 
 
 class MoneyInvalidError(BrazilianValidationError):
-    """Raised when a currency amount string cannot be parsed as BRL currency."""
+    """Lançada quando uma expressão de valor monetário não pode ser convertida em BRL."""
 
 
 class PISInvalidError(BrazilianValidationError):
-    """Raised when a PIS/PASEP/NIT is invalid (bad length, checksum or repeated digits)."""
+    """Lançada quando um PIS/PASEP/NIT é inválido (tamanho, dígito ou dígitos repetidos)."""
 
 
 class TituloEleitorInvalidError(BrazilianValidationError):
-    """Raised when a Título de Eleitor is invalid (bad UF, checksum or length)."""
+    """Lançada quando um Título de Eleitor é inválido (UF inexistente, DV1 ou DV2 incorretos)."""
 
 
 class CNSInvalidError(BrazilianValidationError):
-    """Raised when a Cartão Nacional de Saúde (CNS/SUS) is invalid."""
+    """Lançada quando um Cartão Nacional de Saúde (CNS/SUS) é inválido."""
 
 
 class ProcessoCNJInvalidError(BrazilianValidationError):
-    """Raised when a CNJ judicial process number fails Modulo 97 validation or formatting."""
+    """Lançada quando um processo CNJ falha na validação do Módulo 97 ou formato."""
 
 
 class CertidaoCivilInvalidError(BrazilianValidationError):
-    """Raised when a 32-digit civil registry certificate number is invalid."""
+    """Lançada quando uma Certidão Civil (32 dígitos) é inválida no Módulo 11."""
 
 
 class BankCodeInvalidError(BrazilianValidationError):
-    """Raised when a Brazilian bank COMPE code is unknown or invalid."""
+    """Lançada quando um código COMPE de banco brasileiro não é reconhecido ou é inválido."""

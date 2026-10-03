@@ -1,4 +1,4 @@
-"""Civil Registry Certificate (Certidão de Nascimento, Casamento, Óbito) validation."""
+"""Validação e formatação de Certidão Civil (Nascimento, Casamento e Óbito)."""
 
 from __future__ import annotations
 
@@ -10,19 +10,19 @@ from pydantic_brasil.exceptions import CertidaoCivilInvalidError
 
 
 class CertidaoCivil(BrazilianType):
-    """Brazilian Unified Civil Registry Certificate (Provimento CNJ nº 63/2017).
+    """Certidão de Registro Civil Unificada (Provimento CNJ nº 63/2017).
 
-    Validates 32-digit standardized certificates for Birth, Marriage, and Death records.
-    Format: AAAAAA.BB.CC.DDDD.E.FFFFF.GGG.HHHHHHH-II
-    - AAAAAA: 6-digit Registry Office (CNS) code
-    - BB: 2-digit Collection code (usually 01)
-    - CC: 2-digit Book type (55=Birth, 66=Civil Marriage, 77=Religious Marriage, 88=Death)
-    - DDDD: 4-digit registration year
-    - E: 1-digit Book type code
-    - FFFFF: 5-digit Book number
-    - GGG: 3-digit Page number
-    - HHHHHHH: 7-digit Term number
-    - II: 2-digit Modulo 11 cyclical checksum
+    Valida certidões padronizadas de 32 dígitos para registros de Nascimento, Casamento e Óbito.
+    Formato: AAAAAA.BB.CC.DDDD.E.FFFFF.GGG.HHHHHHH-II
+    - AAAAAA: 6 dígitos do código CNS do cartório
+    - BB: 2 dígitos do código do acervo (geralmente 01)
+    - CC: 2 dígitos do tipo de livro (55=Nascimento, 66=Casamento Civil, 88=Óbito)
+    - DDDD: 4 dígitos do ano do registro
+    - E: 1 dígito do tipo do livro
+    - FFFFF: 5 dígitos do número do livro
+    - GGG: 3 dígitos do número da folha
+    - HHHHHHH: 7 dígitos do número do termo
+    - II: 2 dígitos verificadores por Módulo 11 cíclico
     """
 
     EXPECTED_DIGITS: ClassVar[Optional[int]] = 32
@@ -67,13 +67,13 @@ class CertidaoCivil(BrazilianType):
 
         if len(digits) != 32:
             raise CertidaoCivilInvalidError(
-                f"Certidão Civil must have exactly 32 digits (received '{value}')",
+                f"Certidão Civil deve conter exatamente 32 dígitos (recebido '{value}')",
                 value=value,
             )
 
         if len(set(digits)) == 1:
             raise CertidaoCivilInvalidError(
-                f"Certidão Civil cannot have all repeated digits: '{value}'",
+                f"Certidão Civil não pode conter todos os dígitos iguais: '{value}'",
                 value=value,
             )
 
@@ -83,8 +83,8 @@ class CertidaoCivil(BrazilianType):
 
         if given_dv != expected_dv:
             raise CertidaoCivilInvalidError(
-                f"Invalid check digits for Certidão Civil '{value}' "
-                f"(expected '{expected_dv}', got '{given_dv}')",
+                f"Dígitos verificadores inválidos na Certidão Civil '{value}' "
+                f"(esperado '{expected_dv}', recebido '{given_dv}')",
                 value=value,
             )
 
@@ -92,27 +92,27 @@ class CertidaoCivil(BrazilianType):
 
     @property
     def cartorio_cns(self) -> str:
-        """Returns the 6-digit Registry Office (CNS) code."""
+        """Retorna o código CNS do cartório emissor com 6 dígitos."""
         return self.digits[:6]
 
     @property
     def year(self) -> int:
-        """Returns the 4-digit registration year."""
+        """Retorna o ano de registro do documento."""
         return int(self.digits[10:14])
 
     @property
     def type_code(self) -> str:
-        """Returns the 2-digit record type code (55, 66, 77, 88)."""
+        """Retorna o código do tipo de registro (55, 66, 77, 88)."""
         return self.digits[8:10]
 
     @property
     def type_name(self) -> str:
-        """Returns the human-readable record type (e.g. Nascimento, Casamento, Óbito)."""
+        """Retorna o nome do tipo de certidão (ex: Nascimento, Casamento, Óbito)."""
         return self.TYPE_NAMES.get(self.type_code, "Outro")
 
     @property
     def formatted(self) -> str:
-        """Returns standard formatted certificate number."""
+        """Retorna a certidão formatada no padrão do CNJ."""
         d = self.digits
         return (
             f"{d[:6]}.{d[6:8]}.{d[8:10]}.{d[10:14]}."
@@ -121,7 +121,7 @@ class CertidaoCivil(BrazilianType):
 
     @property
     def masked(self) -> str:
-        """Returns LGPD-safe masked certificate number."""
+        """Retorna a certidão mascarada em conformidade com a LGPD."""
         d = self.digits
         return f"{d[:6]}.**.**.{d[10:14]}." f"*.*****.***.*******-{d[30:]}"
 
@@ -132,7 +132,7 @@ class CertidaoCivil(BrazilianType):
         year: Optional[int] = None,
         formatted: bool = False,
     ) -> CertidaoCivil:
-        """Generates a valid 32-digit civil registry certificate number."""
+        """Gera um número de certidão civil válido para testes."""
         yr = year or random.randint(1990, 2026)
         cns = f"{random.randint(100000, 999999):06d}"
         acervo = "01"

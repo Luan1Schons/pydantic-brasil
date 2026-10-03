@@ -1,4 +1,4 @@
-"""Vehicle and Driver documents (PlacaVeiculo, RENAVAM, CNH)."""
+"""Documentos de trânsito e veículos (PlacaVeiculo, RENAVAM, CNH)."""
 
 from __future__ import annotations
 
@@ -14,21 +14,20 @@ from pydantic_brasil.exceptions import (
 
 
 class PlacaVeiculo(BrazilianType):
-    """Brazilian vehicle license plate (standard and Mercosul format).
+    """Placa de identificação veicular brasileira (Padrão Mercosul e Tradicional).
 
-    Features:
-    - Validates traditional format (`ABC-1234`) and Mercosul format (`ABC1D23`).
-    - Bidirectional conversion between traditional and Mercosul patterns using
-      the official Denatran table.
-    - `.is_mercosul`: Indicates whether the plate uses the Mercosul pattern.
-    - `.to_mercosul()`: Converts a traditional plate to its Mercosul counterpart.
-    - `.to_antiga()`: Converts a Mercosul plate to its traditional counterpart.
+    Recursos:
+    - Validação de placas do formato tradicional (`ABC-1234`) e Mercosul (`ABC1D23`).
+    - Conversão bidirecional entre os padrões oficializada pelo Denatran.
+    - `.is_mercosul`: Informa se a placa utiliza o padrão Mercosul.
+    - `.to_mercosul()`: Converte placa tradicional para padrão Mercosul.
+    - `.to_antiga()`: Converte placa Mercosul para padrão tradicional.
     """
 
     TRADITIONAL_REGEX: ClassVar[re.Pattern[str]] = re.compile(r"^[A-Z]{3}-?\d{4}$")
     MERCOSUL_REGEX: ClassVar[re.Pattern[str]] = re.compile(r"^[A-Z]{3}\d[A-Z]\d{2}$")
 
-    # Official Denatran conversion mapping for 5th character
+    # Mapeamento oficial de conversão do 5º caractere
     NUMBER_TO_LETTER: ClassVar[Dict[str, str]] = {
         "0": "A",
         "1": "B",
@@ -48,7 +47,7 @@ class PlacaVeiculo(BrazilianType):
         clean = re.sub(r"[\s\-]", "", value.upper())
         if len(clean) != 7:
             raise VehiclePlateInvalidError(
-                f"License plate must have 7 characters (received '{value}')",
+                f"Placa de veículo deve conter 7 caracteres (recebido '{value}')",
                 value=value,
             )
 
@@ -56,35 +55,24 @@ class PlacaVeiculo(BrazilianType):
             return clean
 
         raise VehiclePlateInvalidError(
-            f"License plate '{value}' does not match traditional (ABC-1234) "
-            f"or Mercosul (ABC1D23) format.",
+            f"Placa de veículo '{value}' não atende ao padrão tradicional (ABC-1234) "
+            f"nem ao padrão Mercosul (ABC1D23).",
             value=value,
         )
 
     @property
     def is_mercosul(self) -> bool:
-        """Returns True if the plate follows the Mercosul format (e.g. ABC1D23)."""
+        """Retorna True se for uma placa no formato Mercosul (ABC1D23)."""
         return bool(self.MERCOSUL_REGEX.match(str(self)))
 
-    def to_mercosul(self) -> PlacaVeiculo:
-        """Converts traditional plate to Mercosul pattern (e.g. ABC1234 -> ABC1C34)."""
-        if self.is_mercosul:
-            return self
-        raw = str(self)
-        fifth_char = self.NUMBER_TO_LETTER.get(raw[4], raw[4])
-        return PlacaVeiculo(f"{raw[:4]}{fifth_char}{raw[5:]}")
-
-    def to_antiga(self) -> PlacaVeiculo:
-        """Converts Mercosul plate to traditional pattern (e.g. ABC1C34 -> ABC-1234)."""
-        if not self.is_mercosul:
-            return self
-        raw = str(self)
-        fifth_char = self.LETTER_TO_NUMBER.get(raw[4], raw[4])
-        return PlacaVeiculo(f"{raw[:4]}{fifth_char}{raw[5:]}")
+    @property
+    def is_antiga(self) -> bool:
+        """Retorna True se for uma placa no formato tradicional/antigo (ABC-1234)."""
+        return bool(self.TRADITIONAL_REGEX.match(str(self)))
 
     @property
     def formatted(self) -> str:
-        """Returns formatted plate: `ABC-1234` for traditional, `ABC1D23` for Mercosul."""
+        """Retorna a placa com formatação: 'ABC-1234' ou 'ABC1D23'."""
         raw = str(self)
         if self.is_mercosul:
             return raw
@@ -92,11 +80,27 @@ class PlacaVeiculo(BrazilianType):
 
     @property
     def masked(self) -> str:
-        """Returns partially masked plate: `ABC-**34` or `ABC1**3`."""
+        """Retorna a placa com caracteres parciais ocultados: 'ABC-**34' ou 'ABC1**3'."""
         raw = str(self)
         if self.is_mercosul:
             return f"{raw[:4]}**{raw[-1]}"
         return f"{raw[:3]}-**{raw[-2:]}"
+
+    def to_mercosul(self) -> PlacaVeiculo:
+        """Converte placa do padrão antigo para o padrão Mercosul correspondente."""
+        if self.is_mercosul:
+            return self
+        raw = str(self)
+        fifth_char = self.NUMBER_TO_LETTER.get(raw[4], raw[4])
+        return PlacaVeiculo(f"{raw[:4]}{fifth_char}{raw[5:]}")
+
+    def to_antiga(self) -> PlacaVeiculo:
+        """Converte placa do padrão Mercosul para o padrão antigo tradicional."""
+        if not self.is_mercosul:
+            return self
+        raw = str(self)
+        fifth_char = self.LETTER_TO_NUMBER.get(raw[4], raw[4])
+        return PlacaVeiculo(f"{raw[:4]}{fifth_char}{raw[5:]}")
 
     @classmethod
     def openapi_schema_extra(cls) -> Dict[str, Any]:
@@ -104,7 +108,7 @@ class PlacaVeiculo(BrazilianType):
             "type": "string",
             "title": "PlacaVeiculo",
             "description": (
-                "Brazilian vehicle license plate (Traditional ABC-1234 or Mercosul ABC1D23)"
+                "Placa de veículo brasileira (Padrão Tradicional ABC-1234 ou Mercosul ABC1D23)"
             ),
             "examples": ["ABC-1234", "ABC1D23"],
             "pattern": r"^[A-Z]{3}-?\d([A-Z]|\d)\d{2}$",
@@ -112,12 +116,12 @@ class PlacaVeiculo(BrazilianType):
 
 
 class RENAVAM(BrazilianType):
-    """Brazilian National Registry of Motor Vehicles (RENAVAM).
+    """Registro Nacional de Veículos Automotores (RENAVAM).
 
-    Features:
-    - 11-digit numerical code with official Modulo 11 check.
-    - Handles legacy 9-digit numbers by prepending zeros.
-    - `.formatted`: 11 digits string.
+    Recursos:
+    - Código numérico de 11 dígitos com validação oficial de Módulo 11.
+    - Trata números legados preenchendo até 11 dígitos.
+    - `.formatted`: `0000000000-0`.
     - `.masked`: `****.******-1`.
     """
 
@@ -127,30 +131,29 @@ class RENAVAM(BrazilianType):
     def _validate(cls, value: str) -> str:
         digits = cls._extract_digits(value)
 
-        # Pad 9-digit legacy renavam to 11 digits
+        # Ajusta renavam legado de 8 a 11 dígitos
         if 8 <= len(digits) <= 11 and value.isdigit():
             digits = digits.zfill(11)
 
         if len(digits) != 11:
             raise RenavamInvalidError(
-                f"RENAVAM must have 11 digits (received {len(digits)})",
+                f"RENAVAM deve ter 11 dígitos (recebido {len(digits)})",
                 value=value,
             )
 
         if len(set(digits)) == 1:
             raise RenavamInvalidError(
-                f"RENAVAM cannot be composed of identical repeated digits: '{value}'",
+                f"RENAVAM não pode conter todos os dígitos iguais: '{value}'",
                 value=value,
             )
 
-        # Modulo 11 verification
         sum_val = sum(int(digits[i]) * cls.WEIGHTS[i] for i in range(10))
         rem = (sum_val * 10) % 11
         dv = 0 if rem in (10, 11) else rem
 
         if int(digits[10]) != dv:
             raise RenavamInvalidError(
-                f"Invalid RENAVAM checksum (expected {dv}, got {digits[10]})",
+                f"Dígito verificador inválido para o RENAVAM '{value}'",
                 value=value,
             )
 
@@ -158,13 +161,13 @@ class RENAVAM(BrazilianType):
 
     @property
     def formatted(self) -> str:
-        """Returns standard punctuated RENAVAM string: `0000000000-0`."""
+        """Retorna o RENAVAM formatado: `0000000000-0`."""
         d = self.digits
         return f"{d[:10]}-{d[10:]}"
 
     @property
     def masked(self) -> str:
-        """Returns masked RENAVAM: `****.******-0`."""
+        """Retorna o RENAVAM mascarado: `****.******-0`."""
         d = self.digits
         return f"****.******-{d[10:]}"
 
@@ -173,18 +176,18 @@ class RENAVAM(BrazilianType):
         return {
             "type": "string",
             "title": "RENAVAM",
-            "description": "Brazilian National Registry of Motor Vehicles code (RENAVAM)",
+            "description": "Registro Nacional de Veículos Automotores (RENAVAM)",
             "examples": ["00123456789"],
             "pattern": r"^\d{11}$",
         }
 
 
 class CNH(BrazilianType):
-    """Brazilian National Driver's License (Carteira Nacional de Habilitação - CNH).
+    """Carteira Nacional de Habilitação (CNH).
 
-    Features:
-    - 11-digit code with dual Modulo 11 verification digits.
-    - `.formatted`: 11 digits string.
+    Recursos:
+    - Código numérico de 11 dígitos com dupla verificação de Módulo 11.
+    - `.formatted`: 11 dígitos numéricos.
     - `.masked`: `***.*****.**-0`.
     """
 
@@ -197,17 +200,17 @@ class CNH(BrazilianType):
 
         if len(digits) != 11:
             raise CNHInvalidError(
-                f"CNH must have 11 digits (received {len(digits)})",
+                f"CNH deve ter 11 dígitos (recebido {len(digits)})",
                 value=value,
             )
 
         if len(set(digits)) == 1:
             raise CNHInvalidError(
-                f"CNH cannot be composed of identical repeated digits: '{value}'",
+                f"CNH não pode conter todos os dígitos iguais: '{value}'",
                 value=value,
             )
 
-        # First verification digit
+        # Primeiro dígito verificador
         s1 = sum(int(digits[i]) * (9 - i) for i in range(9))
         r1 = s1 % 11
         incr = 0
@@ -219,11 +222,11 @@ class CNH(BrazilianType):
 
         if int(digits[9]) != dv1:
             raise CNHInvalidError(
-                f"Invalid CNH check digit 1 (expected {dv1}, got {digits[9]})",
+                f"Primeiro dígito verificador inválido para a CNH '{value}'",
                 value=value,
             )
 
-        # Second verification digit
+        # Segundo dígito verificador
         s2 = sum(int(digits[i]) * (1 + i) for i in range(9))
         r2 = (s2 + incr) % 11
         if r2 >= 10:
@@ -233,7 +236,7 @@ class CNH(BrazilianType):
 
         if int(digits[10]) != dv2:
             raise CNHInvalidError(
-                f"Invalid CNH check digit 2 (expected {dv2}, got {digits[10]})",
+                f"Segundo dígito verificador inválido para a CNH '{value}'",
                 value=value,
             )
 
@@ -241,12 +244,12 @@ class CNH(BrazilianType):
 
     @property
     def formatted(self) -> str:
-        """Returns standard punctuated CNH string."""
+        """Retorna a CNH formatada."""
         return self.digits
 
     @property
     def masked(self) -> str:
-        """Returns masked CNH string."""
+        """Retorna a CNH mascarada."""
         d = self.digits
         return f"***.*****.**-{d[-1]}"
 
@@ -255,7 +258,7 @@ class CNH(BrazilianType):
         return {
             "type": "string",
             "title": "CNH",
-            "description": "Brazilian National Driver's License number (CNH)",
+            "description": "Carteira Nacional de Habilitação (CNH)",
             "examples": ["12345678901"],
             "pattern": r"^\d{11}$",
         }

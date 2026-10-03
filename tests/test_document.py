@@ -23,7 +23,7 @@ def test_cpf_or_cnpj_with_cpf():
     assert doc.digits == valid_cpf.digits
     assert doc.as_cpf() == valid_cpf
 
-    with pytest.raises(ValueError, match="is a CPF, not a CNPJ"):
+    with pytest.raises(ValueError, match="é um CPF, não um CNPJ"):
         doc.as_cnpj()
 
 
@@ -35,7 +35,7 @@ def test_cpf_or_cnpj_with_cnpj():
     assert doc.digits == valid_cnpj.digits
     assert doc.as_cnpj() == valid_cnpj
 
-    with pytest.raises(ValueError, match="is a CNPJ, not a CPF"):
+    with pytest.raises(ValueError, match="é um CNPJ, não um CPF"):
         doc.as_cpf()
 
 

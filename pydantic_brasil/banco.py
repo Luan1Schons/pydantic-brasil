@@ -1,4 +1,4 @@
-"""Brazilian Bank Codes (COMPE / ISPB) validation and catalog."""
+"""Validação e catálogo de códigos de bancos brasileiros (COMPE / ISPB)."""
 
 from __future__ import annotations
 
@@ -16,10 +16,10 @@ class BankInfo(NamedTuple):
 
 
 class BancoBR(BrazilianType):
-    """Brazilian Bank COMPE code validator and directory.
+    """Código de Banco Brasileiro (COMPE) e catálogo de instituições.
 
-    Validates 3-digit COMPE codes assigned by the Central Bank of Brazil (Bacen)
-    and provides access to the official bank name, short name, and ISPB code.
+    Valida códigos COMPE de 3 dígitos atribuídos pelo Banco Central do Brasil (Bacen)
+    e fornece acesso ao nome empresarial, nome comercial e código ISPB.
     """
 
     EXPECTED_DIGITS: ClassVar[Optional[int]] = 3
@@ -83,7 +83,7 @@ class BancoBR(BrazilianType):
                     break
             if found is None:
                 raise BankCodeInvalidError(
-                    f"Unknown Brazilian bank or COMPE code: '{value}'",
+                    f"Banco brasileiro ou código COMPE não encontrado: '{value}'",
                     value=value,
                 )
             code = found.code
@@ -92,7 +92,8 @@ class BancoBR(BrazilianType):
 
         if code not in cls.BANKS:
             raise BankCodeInvalidError(
-                f"Invalid or unregistered COMPE bank code: '{value}' (resolved to '{code}')",
+                f"Código de banco COMPE inválido ou não cadastrado: '{value}' "
+                f"(resolvido para '{code}')",
                 value=value,
             )
 
@@ -112,44 +113,44 @@ class BancoBR(BrazilianType):
                 if q in b.short_name.lower() or q in b.name.lower():
                     return b.code
             raise BankCodeInvalidError(
-                f"Invalid COMPE bank code: '{value}'",
+                f"Código de banco COMPE inválido: '{value}'",
                 value=value,
             )
         return code
 
     @property
     def code(self) -> str:
-        """Returns the 3-digit COMPE code (e.g. '001', '260')."""
+        """Retorna o código COMPE com 3 dígitos (ex: '001', '260')."""
         return self._info.code
 
     @property
     def name(self) -> str:
-        """Returns the official legal name of the bank."""
+        """Retorna a razão social oficial da instituição financeira."""
         return self._info.name
 
     @property
     def short_name(self) -> str:
-        """Returns the popular/commercial name of the bank."""
+        """Retorna o nome comercial / popular da instituição."""
         return self._info.short_name
 
     @property
     def ispb(self) -> str:
-        """Returns the 8-digit ISPB code defined by Bacen."""
+        """Retorna o código ISPB de 8 dígitos definido pelo Bacen."""
         return self._info.ispb
 
     @property
     def formatted(self) -> str:
-        """Returns formatted string: 'COMPE - Short Name'."""
+        """Retorna a representação formatada: 'COMPE - Nome Comercial'."""
         return f"{self.code} - {self.short_name}"
 
     @property
     def masked(self) -> str:
-        """Returns bank representation (banks are public institutions, not masked)."""
+        """Retorna a representação da instituição financeira (dados públicos)."""
         return self.formatted
 
     @classmethod
     def search(cls, term: str) -> List[BankInfo]:
-        """Searches banks by code, ISPB, or name substring."""
+        """Pesquisa bancos por código COMPE, ISPB ou trecho do nome."""
         t = term.strip().lower()
         return [
             b

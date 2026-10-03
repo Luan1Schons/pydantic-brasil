@@ -109,7 +109,7 @@ def test_base_fallback_methods():
     assert (cpf == 12345) is False
     assert cpf.__eq__(None) is False
 
-    with pytest.raises(TypeError, match="Value cannot be None"):
+    with pytest.raises(TypeError, match="Valor não pode ser nulo"):
         CPF(None)
 
 
