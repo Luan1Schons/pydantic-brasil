@@ -53,3 +53,27 @@ class StateRegistrationInvalidError(BrazilianValidationError):
 
 class MoneyInvalidError(BrazilianValidationError):
     """Raised when a currency amount string cannot be parsed as BRL currency."""
+
+
+class PISInvalidError(BrazilianValidationError):
+    """Raised when a PIS/PASEP/NIT is invalid (bad length, checksum or repeated digits)."""
+
+
+class TituloEleitorInvalidError(BrazilianValidationError):
+    """Raised when a Título de Eleitor is invalid (bad UF, checksum or length)."""
+
+
+class CNSInvalidError(BrazilianValidationError):
+    """Raised when a Cartão Nacional de Saúde (CNS/SUS) is invalid."""
+
+
+class ProcessoCNJInvalidError(BrazilianValidationError):
+    """Raised when a CNJ judicial process number fails Modulo 97 validation or formatting."""
+
+
+class CertidaoCivilInvalidError(BrazilianValidationError):
+    """Raised when a 32-digit civil registry certificate number is invalid."""
+
+
+class BankCodeInvalidError(BrazilianValidationError):
+    """Raised when a Brazilian bank COMPE code is unknown or invalid."""

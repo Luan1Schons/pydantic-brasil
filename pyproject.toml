@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pydantic-brasil"
-version = "0.1.0"
-description = "Modern, high-performance Brazilian data types and validators for Pydantic v2 (CPF, CNPJ, CEP, Chave PIX, Telefone, Placa Mercosul, CNH, IE, Dinheiro BRL)"
+version = "0.2.0"
+description = "Tipos de dados e validadores brasileiros de alta performance para Pydantic v2 e FastAPI (CPF, CNPJ 2026, CEP, Chave PIX, Telefone, CNH, PIS, SUS, Título de Eleitor, Processo CNJ e mais)"
 readme = "README.md"
 authors = [
     { name = "Luan Schons", email = "luanschons2000@gmail.com" }
@@ -22,9 +22,20 @@ keywords = [
     "pix",
     "chave-pix",
     "telefone",
+    "pis",
+    "pasep",
+    "sus",
+    "cns",
+    "titulo-eleitor",
+    "processo-cnj",
+    "certidao",
+    "banco",
+    "cnh",
+    "renavam",
     "placa",
     "mercosul",
     "fastapi",
+    "validacao",
     "validation"
 ]
 classifiers = [
