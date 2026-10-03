@@ -18,6 +18,7 @@ class BrazilianType(str, ABC):
     """
 
     EXPECTED_DIGITS: ClassVar[Optional[int]] = None
+    SERIALIZE_AS_DIGITS: ClassVar[bool] = True
 
     def __new__(cls, value: Any) -> BrazilianType:
         if isinstance(value, cls):
@@ -123,7 +124,12 @@ class BrazilianType(str, ABC):
             ),
             serialization=core_schema.plain_serializer_function_ser_schema(
                 lambda instance: (
-                    instance.digits if getattr(instance, "digits", None) else str(instance)
+                    instance.digits
+                    if (
+                        getattr(instance, "SERIALIZE_AS_DIGITS", True)
+                        and getattr(instance, "digits", None)
+                    )
+                    else str(instance)
                 )
             ),
         )

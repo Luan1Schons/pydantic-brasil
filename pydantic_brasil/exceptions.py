@@ -77,3 +77,27 @@ class CertidaoCivilInvalidError(BrazilianValidationError):
 
 class BankCodeInvalidError(BrazilianValidationError):
     """Lançada quando um código COMPE de banco brasileiro não é reconhecido ou é inválido."""
+
+
+class ChaveDFeInvalidError(BrazilianValidationError):
+    """Lançada quando uma chave de acesso de DF-e (NF-e/NFC-e/CT-e) é inválida no Módulo 11."""
+
+
+class BoletoInvalidError(BrazilianValidationError):
+    """Lançada quando uma linha digitável ou código de barras de boleto é inválido."""
+
+
+class RastreioInvalidError(BrazilianValidationError):
+    """Lançada quando um código de rastreamento postal (S10) dos Correios é inválido."""
+
+
+class CAEPFInvalidError(BrazilianValidationError):
+    """Lançada quando um CAEPF é inválido em tamanho ou dígitos verificadores."""
+
+
+class GTINInvalidError(BrazilianValidationError):
+    """Lançada quando um código GTIN/EAN possui dígito verificador inválido."""
+
+
+class IBANInvalidError(BrazilianValidationError):
+    """Lançada quando um código IBAN brasileiro é inválido na regra ISO 7064 / Módulo 97."""

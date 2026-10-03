@@ -24,6 +24,7 @@ class PlacaVeiculo(BrazilianType):
     - `.to_antiga()`: Converte placa Mercosul para padrão tradicional.
     """
 
+    SERIALIZE_AS_DIGITS: ClassVar[bool] = False
     TRADITIONAL_REGEX: ClassVar[re.Pattern[str]] = re.compile(r"^[A-Z]{3}-?\d{4}$")
     MERCOSUL_REGEX: ClassVar[re.Pattern[str]] = re.compile(r"^[A-Z]{3}\d[A-Z]\d{2}$")
 

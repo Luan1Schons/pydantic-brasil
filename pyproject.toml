@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pydantic-brasil"
-version = "0.2.0"
-description = "Tipos de dados e validadores brasileiros de alta performance para Pydantic v2 e FastAPI (CPF, CNPJ 2026, CEP, Chave PIX, Telefone, CNH, PIS, SUS, Título de Eleitor, Processo CNJ e mais)"
+version = "0.3.0"
+description = "Tipos de dados e validadores brasileiros de alta performance para Pydantic v2 e FastAPI (CPF, CNPJ 2026, NF-e, Boleto, IBAN, Rastreio Correios, GTIN, Chave PIX e mais)"
 readme = "README.md"
 authors = [
     { name = "Luan Schons", email = "luanschons2000@gmail.com" }
@@ -22,6 +22,15 @@ keywords = [
     "pix",
     "chave-pix",
     "telefone",
+    "boleto",
+    "linha-digitavel",
+    "nfe",
+    "dfe",
+    "correios",
+    "rastreio",
+    "gtin",
+    "ean",
+    "iban",
     "pis",
     "pasep",
     "sus",
