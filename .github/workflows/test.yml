@@ -1,0 +1,44 @@
+name: Test and Quality Gates
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e ".[dev]"
+
+      - name: Run code formatting checks (black)
+        run: black --check pydantic_brasil tests
+
+      - name: Run linter (flake8)
+        run: flake8 pydantic_brasil tests
+
+      - name: Run static type checker (mypy)
+        run: mypy pydantic_brasil tests
+
+      - name: Run test suite with pytest & coverage
+        run: pytest --cov=pydantic_brasil --cov-report=xml --cov-report=term-missing
