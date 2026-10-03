@@ -2,11 +2,14 @@
 
 [![Versão PyPI](https://img.shields.io/pypi/v/pydantic-brasil?color=blue&style=flat-square)](https://pypi.org/project/pydantic-brasil/)
 [![Versões Python](https://img.shields.io/pypi/pyversions/pydantic-brasil?style=flat-square)](https://pypi.org/project/pydantic-brasil/)
+[![Downloads/mês](https://img.shields.io/pypi/dm/pydantic-brasil?color=blue&label=downloads%2Fm%C3%AAs&style=flat-square)](https://pypistats.org/packages/pydantic-brasil)
+[![Total de Downloads](https://img.shields.io/pepy/dt/pydantic-brasil?color=green&label=total%20downloads&style=flat-square)](https://pepy.tech/project/pydantic-brasil)
 [![Testes de CI](https://github.com/Luan1Schons/pydantic-brasil/actions/workflows/test.yml/badge.svg)](https://github.com/Luan1Schons/pydantic-brasil/actions/workflows/test.yml)
 [![Cobertura](https://img.shields.io/badge/coverage-94%25-brightgreen?style=flat-square)](https://github.com/Luan1Schons/pydantic-brasil)
 [![Pydantic v2](https://img.shields.io/badge/pydantic-v2-E92063?logo=pydantic&logoColor=white&style=flat-square)](https://docs.pydantic.dev/)
 [![Tipagem Estrita](https://img.shields.io/badge/typing-Mypy%20Strict-blue?style=flat-square)](https://mypy.readthedocs.io/)
 [![Licença: MIT](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Stars](https://img.shields.io/github/stars/Luan1Schons/pydantic-brasil?style=social)](https://github.com/Luan1Schons/pydantic-brasil)
 
 **Tipos de dados e validadores brasileiros modernos e de alta performance desenvolvidos nativamente para Pydantic v2 e FastAPI.**
 
@@ -377,8 +380,17 @@ Contribuições, correções de bugs e sugestões de novos documentos brasileiro
 4. Envie o commit (`git commit -m 'feat: Adiciona validador para Documento'`)
 5. Abra um Pull Request
 
+Consulte o guia completo em [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## 📋 Changelog
+
+Veja todas as novidades e histórico de versões em [CHANGELOG.md](CHANGELOG.md).
+
 ---
 
 ## 📄 Licença
 
 Distribuído sob a Licença MIT. Consulte o arquivo `LICENSE` para mais detalhes.
+

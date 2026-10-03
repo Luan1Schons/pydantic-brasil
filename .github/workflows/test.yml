@@ -42,3 +42,12 @@ jobs:
 
       - name: Run test suite with pytest & coverage
         run: pytest --cov=pydantic_brasil --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: pydantic-brasil
+          fail_ci_if_error: false
